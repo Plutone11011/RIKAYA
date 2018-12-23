@@ -1,4 +1,4 @@
-#define devAddrBase 0x10000050
+#define DEV_ADDR_BASE 0x10000050
 #define READY_STAT 1 //codici dello status byte
 #define TRANSMITTED_STAT 5
 #define BUSY_STAT 3

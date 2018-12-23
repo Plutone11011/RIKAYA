@@ -13,7 +13,7 @@ int strlen(char *str){
  
 void print(char *str){
     //trova l'indirizzo del registro del terminale 0
-    unsigned int term0Addr = devAddrBase + 512 ;
+    unsigned int term0Addr = DEV_ADDR_BASE + 512 ;
     //punta ai campi TRANSM_STATUS e TRANSM_COMMAND del registro 
     unsigned int *term0AddrStatus = (int*)(term0Addr + 0x8) ;
     unsigned int *term0AddrCommand = (int*)(term0Addr + 0xC) ;
