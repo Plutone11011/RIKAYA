@@ -4,7 +4,6 @@
 #define BUSY_STAT 3
 #define TRANSMIT_CHAR 2 //codice di invio carattere per il campo trasm command
 
-int strlen(char *str);
 
 //stampa str sul terminale 0
 void print(char *str);

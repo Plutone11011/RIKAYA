@@ -1,16 +1,6 @@
 #include "print.h"
 
 
-int strlen(char *str){
-    int len = 0 ;
-    while (*str != 0){
-        len++ ;
-        *str++ ;
-    }
-    return len ;
-}
-
- 
 void print(char *str){
     //trova l'indirizzo del registro del terminale 0
     unsigned int term0Addr = DEV_ADDR_BASE + 512 ;
@@ -19,7 +9,7 @@ void print(char *str){
     unsigned int *term0AddrCommand = (int*)(term0Addr + 0xC) ;
 
     unsigned int i, tmp ;
-    for (i = 0; i < strlen(str); i++){
+    for (i = 0; i < *(str + i); i++){
         //seleziona solo lo status byte
         do{
             tmp = (*term0AddrStatus) & 0xFF ;
