@@ -18,6 +18,7 @@ Run make to compile, link and get a .core file named kernel.core.umps
 ### Authors
 
 * Lorenzo Borelli 0000789622
+* Daniele Ventura 0000801002
 
 ### Layout
 The RIKAYA project contains a print source file, and its header, which defines a print of a null-terminated string on terminal 0. The main tests the print. The print_config file is a suitable machine configuration.
