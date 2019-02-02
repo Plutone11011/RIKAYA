@@ -63,3 +63,14 @@ pcb_t *allocPcb(void){
     }
 
 }
+
+
+void freePcb(pcb_t *p){
+    if (pcbfree_h == NULL){
+        pcbfree_h = p ;
+        INIT_LIST_HEAD(&(pcbfree_h->p_next));
+    }
+    else {
+        list_add_tail(&(p->p_next),&(pcbfree_h->p_next));
+    }
+}

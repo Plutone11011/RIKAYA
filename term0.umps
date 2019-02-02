@@ -1,2 +1,3 @@
 Initialized Process Control Blocks   
  allocPcb test OK   
+ Added 10 entries to the free PCB list   
