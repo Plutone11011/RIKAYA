@@ -28,7 +28,7 @@ pcb_t *allocPcb(void){
     int i ;
     pcb_t *tmp = container_of(pcbfree_h->p_next.prev,pcb_t,p_next) ;
 
-    if (!list_empty(&(pcbfree_h->p_next))){
+    if (pcbfree_h != NULL){
         /*elimino elemento in coda*/
 
         tmp->p_s.entry_hi = 0;
@@ -47,7 +47,15 @@ pcb_t *allocPcb(void){
         setlist_head(tmp->p_child) ;
         setlist_head(tmp->p_sib) ;
         /*forse anche nel tree andrà fatta stessa cosa*/
-        list_del(&(tmp->p_next));
+        if (pcbfree_h != tmp){
+            list_del(&(tmp->p_next));
+        }
+        /* se è rimasto un solo elemento list_del non funziona perché assume sia una lista con sentinella */
+        else {
+            tmp->p_next.next = NULL ;
+            tmp->p_next.prev = NULL ;
+            pcbfree_h = NULL ;
+        }
         return tmp ;
     }
     else {

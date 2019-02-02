@@ -178,13 +178,13 @@ int main() {
 	}
 	addokbuf(" allocPcb test OK   \n");
 
-#if 0	
+	
 	/* Return the last 10 entries back to free list */
 	for (i = 10; i < MAXPROC; i++)
           freePcb(procp[i]);
 	
 	addokbuf(" Added 10 entries to the free PCB list   \n");
-
+#if 0 
 	/* Create a 10-element process queue */
 	INIT_LIST_HEAD(&qa);
 	

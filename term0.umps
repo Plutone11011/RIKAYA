@@ -1,2 +1,2 @@
 Initialized Process Control Blocks   
-allocPcb(): unexpected NULL   
+ allocPcb test OK   
