@@ -1,7 +1,7 @@
 #ifndef ASL_H
 #define ASL_H
 
-#include <types_rikaya.h>
+#include "../header/types_rikaya.h"
 
 /* ASL handling functions */
 semd_t* getSemd(int *key);

@@ -1,12 +1,12 @@
 #ifndef _TYPES11_H
 #define _TYPES11_H
 
-#include <umps/types.h>
-#include <listx.h>
+#include "types.h"
+#include "listx.h"
 
 typedef unsigned int memaddr;
 
-// Process Control Block (PCB) data structure
+/* Process Control Block (PCB) data structure */
 typedef struct pcb_t {
 	/*process queue fields */
 	struct list_head	p_next;
@@ -28,14 +28,14 @@ typedef struct pcb_t {
 
 
 
-// Semaphore Descriptor (SEMD) data structure
+/* Semaphore Descriptor (SEMD) data structure */
 typedef struct semd_t {
 	struct list_head	s_next;
 
-	// Semaphore key
+	/* Semaphore key */
 	int    *s_key;
 
-	// Queue of PCBs blocked on the semaphore
+	/* Queue of PCBs blocked on the semaphore */
 	struct list_head	s_procQ;
 } semd_t;
 

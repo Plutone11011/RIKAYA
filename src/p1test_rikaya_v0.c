@@ -32,12 +32,12 @@
  *    
  */
 
-#include "const.h"
-#include "listx.h"
-#include <umps/libumps.h>
+#include "../header/const.h"
+#include "../header/libumps.h"
+#include "../header/listx.h"
 
-#include "pcb.h"
-#include "asl.h"
+#include "../header/pcb.h"
+#include "../header/asl.h"
 
 #define	MAXSEM	MAXPROC
 
@@ -168,8 +168,9 @@ int main() {
 
 	/* Check allocPcb */
 	for (i = 0; i < MAXPROC; i++) {
-		if ((procp[i] = allocPcb()) == NULL)
+		if ((procp[i] = allocPcb()) == NULL){
 			adderrbuf("allocPcb(): unexpected NULL   ");
+		}
 	}
 	
 	if (allocPcb() != NULL) {
@@ -177,7 +178,7 @@ int main() {
 	}
 	addokbuf(" allocPcb test OK   \n");
 
-	
+#if 0	
 	/* Return the last 10 entries back to free list */
 	for (i = 10; i < MAXPROC; i++)
           freePcb(procp[i]);
@@ -409,6 +410,6 @@ int main() {
 	
 	addokbuf("ASL module OK   \n");
 	addokbuf("So Long and Thanks for All the Fish\n");
-  
+#endif  
 	return 0;
 }

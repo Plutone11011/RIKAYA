@@ -18,7 +18,7 @@ UMPS2_DATA_DIR = $(UMPS2_DIR_PREFIX)/share/umps2
 UMPS2_INCLUDE_DIR = $(UMPS2_DIR_PREFIX)/include/umps2
 
 # Compiler options
-CFLAGS_LANG = -ffreestanding -ansi
+CFLAGS_LANG = -ffreestanding
 CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32
 CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_INCLUDE_DIR) -Wall -O0
 
@@ -30,15 +30,21 @@ VPATH = $(UMPS2_DATA_DIR)
 
 .PHONY : all clean
 
-all : kernel.core.umps
+all: kernel.core.umps
 
-kernel.core.umps : kernel
+kernel.core.umps: kernel
 	umps2-elf2umps -k $<
 
-kernel : print.o crtso.o libumps.o main.o
+kernel: pcb.o crtso.o libumps.o p1test_rikaya_v0.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-clean :
+pcb.o: src/pcb.c
+	$(CC) -c $< $(CFLAGS)
+
+p1test_rikaya_v0.o: src/p1test_rikaya_v0.c
+	$(CC) -c $< $(CFLAGS)
+
+clean:
 	-rm -f *.o kernel kernel.*.umps
 
 # Pattern rule for assembly modules
