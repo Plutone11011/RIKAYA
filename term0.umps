@@ -1,3 +1,5 @@
 Initialized Process Control Blocks   
  allocPcb test OK   
  Added 10 entries to the free PCB list   
+Testing insertProcQ ...   
+Test insertProcQ: OK. Inserted 10 elements 

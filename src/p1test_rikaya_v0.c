@@ -35,7 +35,6 @@
 #include "../header/const.h"
 #include "../header/libumps.h"
 #include "../header/listx.h"
-
 #include "../header/pcb.h"
 #include "../header/asl.h"
 
@@ -83,7 +82,6 @@ typedef unsigned int devreg;
 devreg termstat(memaddr *stataddr) {
 	return((*stataddr) & STATUSMASK);
 }
-
 /* This function prints a string on specified terminal and returns TRUE if 
  * print was successful, FALSE if not   */
 unsigned int termprint(char * str, unsigned int term) {
@@ -154,6 +152,31 @@ void adderrbuf(char *strp) {
 	PANIC();
 }
 
+/* debug itoa per numeri decimali */
+void itoa(int x, char aux[]){
+	int i = 0, j = 0 ;
+
+	if (x == 0){
+		aux[0] = '0' ;
+		aux[1] = '\0' ;
+	}
+	else {
+		while (x != 0){
+			aux[i++] = (x % 10) + '0' ;
+			x = x / 10 ;
+			j++;
+		}
+		j--;
+	}
+	//algoritmo di xor swap
+	for (i = 0; i < j ; i++){
+		aux[i] = aux[i] ^ aux[j] ;
+		aux[j] = aux[i] ^ aux[j] ;
+		aux[i] = aux[i] ^ aux[j] ;
+		j--;
+	}
+	
+}
 
 /******************************************************************************
  * Main Test File
@@ -184,7 +207,7 @@ int main() {
           freePcb(procp[i]);
 	
 	addokbuf(" Added 10 entries to the free PCB list   \n");
-#if 0 
+
 	/* Create a 10-element process queue */
 	INIT_LIST_HEAD(&qa);
 	
@@ -222,7 +245,7 @@ int main() {
 	/* Check outProcQ and headProcQ */
 	if (headProcQ(&qa) != maxproc)
 		adderrbuf("ERROR: headProcQ(qa) failed   ");
-	
+#if 0	
 	/* Removing an element from ProcQ */
 	q = outProcQ(&qa, proc);
 	if ((q == NULL) || (q != proc))
