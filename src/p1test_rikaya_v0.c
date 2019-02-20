@@ -144,7 +144,7 @@ void addokbuf(char *strp) {
 
 /* This function places the specified character string in errbuf and
  *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message */ 
+ *	the system shuts down with a panic message  */
 void adderrbuf(char *strp) {
 
 	termprint(strp, 0);
@@ -271,15 +271,15 @@ int main() {
 	if (q != minproc)
 		adderrbuf("ERROR: removeProcQ(): failed on last entry   ");
 	freePcb(q); //fino a qua funziona
-#if 0	
+
 	if (removeProcQ(&qa) != NULL)
-		printf("ERROR: removeProcQ(&qa): removes too many entries   ");
+		adderrbuf("ERROR: removeProcQ(&qa): removes 1 more entry   ");
 
 	if (!emptyProcQ(&qa))
-		printf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
-
-	printf(" Test insertProcQ(), removeProcQ() and emptyProcQ(): OK   \n");
-	printf(" Test process queues module: OK      \n");
+		adderrbuf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
+#if 0
+	addokbuf(" Test insertProcQ(), removeProcQ() and emptyProcQ(): OK   \n");
+	addokbuf(" Test process queues module: OK      \n");
 
 	addokbuf(" Testing process trees...\n");
 

@@ -111,6 +111,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
             //se invece p ha priorità minima
             else if (iterator->next == head){
                 list_add_tail(&(p->p_next), head);
+                break ;
             }
         }
     }
