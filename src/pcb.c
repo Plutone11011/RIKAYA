@@ -152,3 +152,33 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
         return NULL ;
     }
 }
+
+int emptyChild(pcb_t *this){
+
+    /*non si può usare la stessa api delle code, perché nel test si invoca
+    emptyChild senza prima inizializzare la lista vuota, come invece si fa per le code*/
+    if (this->p_child.next == NULL){
+        return 1 ;
+    }
+    else {
+        return 0 ;
+    }
+}
+
+void insertChild(pcb_t *prnt, pcb_t *p){
+
+    p->p_parent = prnt ;
+    //se non ha figli figlio
+    if (emptyChild(prnt)){
+        prnt->p_child.next = &(p->p_child) ;
+        //inizializzo la lista dei sibling per trattarli come le code
+        INIT_LIST_HEAD(&(p->p_sib));
+    }
+    //altrimenti
+    else {
+        //assumo che il primo figlio sia la testa della lista di figli
+        list_add_tail(&(p->p_sib),&(container_of(prnt->p_child.next,pcb_t,p_child)->p_sib)) ;
+    }
+
+
+}

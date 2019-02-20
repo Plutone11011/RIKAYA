@@ -144,7 +144,7 @@ void addokbuf(char *strp) {
 
 /* This function places the specified character string in errbuf and
  *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message  */
+ *	the system shuts down with a panic message */ 
 void adderrbuf(char *strp) {
 
 	termprint(strp, 0);
@@ -277,7 +277,7 @@ int main() {
 
 	if (!emptyProcQ(&qa))
 		adderrbuf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
-#if 0
+
 	addokbuf(" Test insertProcQ(), removeProcQ() and emptyProcQ(): OK   \n");
 	addokbuf(" Test process queues module: OK      \n");
 
@@ -285,13 +285,14 @@ int main() {
 
 	if (!emptyChild(procp[2]))
 	  adderrbuf("ERROR: emptyChild: unexpected FALSE   ");
-	
+
 	/* make procp[1],procp[2],procp[3], procp[7] children of procp[0] */
 	addokbuf("Inserting...   \n");
 	insertChild(procp[0], procp[1]);
 	insertChild(procp[0], procp[2]);
 	insertChild(procp[0], procp[3]);
 	insertChild(procp[0], procp[7]);
+
 	addokbuf("Inserted 2 children of pcb0  \n");
 	
 	/* make procp[8],procp[9] children of procp[7] */
@@ -303,9 +304,8 @@ int main() {
 	  adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");
 	
 	if (emptyChild(procp[7]))
-		adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");
-	
-	/* Check outChild */
+		adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");	
+#if 0	/* Check outChild */
 	q = outChild(procp[1]);
 	if (q == NULL || q != procp[1])
 		adderrbuf("ERROR: outChild(procp[1]) failed ");
