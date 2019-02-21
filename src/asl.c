@@ -46,7 +46,7 @@ static semd_t* allocSemaphore(){
         semd_t *lastSem = container_of(semdFree_h->s_next.prev,semd_t,s_next) ;
 
         
-        if ((lastSem->s_next.next == &(lastSem->s_next)) && (lastSem->s_next.prev == &(lastSem->s_next))){
+        if (list_empty(&(semdFree_h->s_next))){
             semdFree_h = NULL ;
         }
         
@@ -63,7 +63,24 @@ static semd_t* allocSemaphore(){
         return NULL ;
     }
 }
+//chiamato solo quando il semaforo non ha più processi bloccati
+static void freeSemaphore(semd_t *sem){
 
+        if (list_empty(&(semd_h->s_next))){
+            //se il semaforo è l'ultimo in ASL
+            semd_h = NULL ;
+        }
+        else {
+            list_del(&(semd_h->s_next)) ;
+        }
+        //in entrambi i casi vengono aggiunti alla lista dei liberi
+        if (semdFree_h == NULL){
+            semdFree_h = sem ;
+        }
+        else {
+            list_add(&(sem->s_next),&(semdFree_h->s_next));
+        }
+}
 
 
 semd_t* getSemd(int *key){
@@ -85,7 +102,7 @@ int insertBlocked(int *key,pcb_t* p){
         newSem = allocSemaphore() ;
         if (newSem == NULL){
             //non ci sono più semafori liberi
-            return 1 ;
+            return TRUE ;
         }
         else {
             semd_h = newSem ;
@@ -97,7 +114,7 @@ int insertBlocked(int *key,pcb_t* p){
             INIT_LIST_HEAD(&(semd_h->s_procQ)) ;
             insertProcQ(&(semd_h->s_procQ),p);
             
-            return 0 ;
+            return FALSE ;
         }
     }
     else {
@@ -108,13 +125,13 @@ int insertBlocked(int *key,pcb_t* p){
             p->p_semkey = key ;
             //se il semaforo già esisteva, non c'è bisogno di inizializzarlo
             insertProcQ(&(sem_withKey->s_procQ),p);
-            return 0 ;
+            return FALSE ;
         }
         else { //l'asl non è vuota ma il semaforo con quella chiave non c'è
             newSem = allocSemaphore() ;
             if (newSem == NULL){
                 //non ci sono più semafori liberi
-                return 1 ;
+                return TRUE ;
             }
             else {
                 p->p_semkey = key ;
@@ -124,8 +141,26 @@ int insertBlocked(int *key,pcb_t* p){
                 INIT_LIST_HEAD(&(newSem->s_procQ));
                 insertProcQ(&(newSem->s_procQ),p);
 
-                return 0 ;
+                return FALSE ;
             }   
         }
+    }
+}
+
+pcb_t* removeBlocked(int *key){
+
+    pcb_t *pcb_removed ;
+    semd_t *removeSem ;
+
+    if ((removeSem = getSemd(key)) == NULL){
+        //si ritorna null sia se la ASL è vuota sia se il descrittore non esiste
+        return NULL ;
+    }
+    else {
+        pcb_removed = removeProcQ(&(removeSem->s_procQ)) ;
+        if (emptyProcQ(&(removeSem->s_procQ))){
+            freeSemaphore(removeSem);
+        }
+        return pcb_removed ;
     }
 }

@@ -15,4 +15,4 @@ Testing process tree module OK
 Initializing active semaphore list   
  Test insertBlocked(): test #1 started  
 Test insertBlocked(): test #2 started  
-System halted 
+kernel panic()

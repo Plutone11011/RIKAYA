@@ -9,6 +9,7 @@
 
 /* Maxi number of overall (eg, system, daemons, user) concurrent processes */
 #define MAXPROC 20
+#define	MAXSEM	MAXPROC
 
 #define UPROCMAX 3  /* number of usermode processes (not including master proc
 		       and system daemons */

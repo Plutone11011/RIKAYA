@@ -37,8 +37,8 @@
 #include "../header/listx.h"
 #include "../header/pcb.h"
 #include "../header/asl.h"
+#include <stdio.h>
 
-#define	MAXSEM	MAXPROC
 
 #define MAX_PCB_PRIORITY		10
 #define MIN_PCB_PRIORITY		0
@@ -144,13 +144,13 @@ void addokbuf(char *strp) {
 
 /* This function places the specified character string in errbuf and
  *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message */  
+ *	the system shuts down with a panic message   
 void adderrbuf(char *strp) {
 
 	termprint(strp, 0);
 		
 	PANIC();
-}
+} */
 
 /* debug itoa per numeri decimali */
 void itoa(int x, char aux[]){
@@ -187,37 +187,37 @@ int main() {
 	int i;
 
 	initPcbs();
-	addokbuf("Initialized Process Control Blocks   \n");
+	printf("Initialized Process Control Blocks   \n");
 
 	/* Check allocPcb */
 	for (i = 0; i < MAXPROC; i++) {
 		if ((procp[i] = allocPcb()) == NULL){
-			adderrbuf("allocPcb(): unexpected NULL   ");
+			printf("allocPcb(): unexpected NULL   ");
 		}
 	}
 	
 	if (allocPcb() != NULL) {
-		adderrbuf(" ERROR: allocPcb(): allocated more than MAXPROC entries   ");
+		printf(" ERROR: allocPcb(): allocated more than MAXPROC entries   ");
 	}
-	addokbuf(" allocPcb test OK   \n");
+	printf(" allocPcb test OK   \n");
 
 	
 	/* Return the last 10 entries back to free list */
 	for (i = 10; i < MAXPROC; i++)
           freePcb(procp[i]);
 	
-	addokbuf(" Added 10 entries to the free PCB list   \n");
+	printf(" Added 10 entries to the free PCB list   \n");
 
 	/* Create a 10-element process queue */
 	INIT_LIST_HEAD(&qa);
 	
-	if (!emptyProcQ(&qa)) adderrbuf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
+	if (!emptyProcQ(&qa)) printf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
 	
-	addokbuf("Testing insertProcQ ...   \n");
+	printf("Testing insertProcQ ...   \n");
 	
 	for (i = 0; i < 10; i++) {
 		if ((q = allocPcb()) == NULL)
-			adderrbuf("ERROR: allocPcb(): unexpected NULL while insert   ");
+			printf("ERROR: allocPcb(): unexpected NULL while insert   ");
 		switch (i) {
 			case 3:
 				q->priority=DEFAULT_PCB_PRIORITY;
@@ -238,108 +238,108 @@ int main() {
 		insertProcQ(&qa, q);
 	}
 	
-	addokbuf("Test insertProcQ: OK. Inserted 10 elements \n");
+	printf("Test insertProcQ: OK. Inserted 10 elements \n");
 	
-	if (emptyProcQ(&qa)) adderrbuf("ERROR: emptyProcQ(qa): unexpected TRUE"   );
+	if (emptyProcQ(&qa)) printf("ERROR: emptyProcQ(qa): unexpected TRUE"   );
 
 	/* Check outProcQ and headProcQ */
 	if (headProcQ(&qa) != maxproc)
-		adderrbuf("ERROR: headProcQ(qa) failed   ");
+		printf("ERROR: headProcQ(qa) failed   ");
 
 	/* Removing an element from ProcQ */
 	q = outProcQ(&qa, proc);
 	if ((q == NULL) || (q != proc))
-		adderrbuf("ERROR: outProcQ(&qa, proc) failed to remove the entry   ");		
+		printf("ERROR: outProcQ(&qa, proc) failed to remove the entry   ");		
 	freePcb(q);
 
 	/* Removing the first element from ProcQ */
 	q = removeProcQ(&qa);
 	if (q == NULL || q != maxproc)
-		adderrbuf("ERROR: removeProcQ(&qa, midproc) failed to remove the elements in the right order   ");
+		printf("ERROR: removeProcQ(&qa, midproc) failed to remove the elements in the right order   ");
 	freePcb(q);
 
 	/* Removing other 7 elements  */
-	addokbuf(" Testing removeProcQ ...   \n");
+	printf(" Testing removeProcQ ...   \n");
 	for (i = 0; i < 7; i++) {
 		if ((q = removeProcQ(&qa)) == NULL)
-			adderrbuf("removeProcQ(&qa): unexpected NULL   ");
+			printf("removeProcQ(&qa): unexpected NULL   ");
 		freePcb(q);
 	}
 
 	// Removing the last element
 	q=removeProcQ(&qa);
 	if (q != minproc)
-		adderrbuf("ERROR: removeProcQ(): failed on last entry   ");
+		printf("ERROR: removeProcQ(): failed on last entry   ");
 	freePcb(q); //fino a qua funziona
 
 	if (removeProcQ(&qa) != NULL)
-		adderrbuf("ERROR: removeProcQ(&qa): removes 1 more entry   ");
+		printf("ERROR: removeProcQ(&qa): removes 1 more entry   ");
 
 	if (!emptyProcQ(&qa))
-		adderrbuf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
+		printf("ERROR: emptyProcQ(qa): unexpected FALSE   ");
 
-	addokbuf(" Test insertProcQ(), removeProcQ() and emptyProcQ(): OK   \n");
-	addokbuf(" Test process queues module: OK      \n");
+	printf(" Test insertProcQ(), removeProcQ() and emptyProcQ(): OK   \n");
+	printf(" Test process queues module: OK      \n");
 
-	addokbuf(" Testing process trees...\n");
+	printf(" Testing process trees...\n");
 
 	if (!emptyChild(procp[2]))
-	  adderrbuf("ERROR: emptyChild: unexpected FALSE   ");
+	  printf("ERROR: emptyChild: unexpected FALSE   ");
 
 	/* make procp[1],procp[2],procp[3], procp[7] children of procp[0] */
-	addokbuf("Inserting...   \n");
+	printf("Inserting...   \n");
 	insertChild(procp[0], procp[1]);
 	insertChild(procp[0], procp[2]);
 	insertChild(procp[0], procp[3]);
 	insertChild(procp[0], procp[7]);
 
-	addokbuf("Inserted 2 children of pcb0  \n");
+	printf("Inserted 2 children of pcb0  \n");
 	
 	/* make procp[8],procp[9] children of procp[7] */
 	insertChild(procp[7], procp[8]);
 	insertChild(procp[7], procp[9]);
-	addokbuf("Inserted 2 children of pcb7  \n");
+	printf("Inserted 2 children of pcb7  \n");
 
 	if (emptyChild(procp[0]))
-	  adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");
+	  printf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");
 	
 	if (emptyChild(procp[7]))
-		adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");	
+		printf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");	
 	/* Check outChild */
 	q = outChild(procp[1]);
 	if (q == NULL || q != procp[1])
-		adderrbuf("ERROR: outChild(procp[1]) failed ");
+		printf("ERROR: outChild(procp[1]) failed ");
 	
 	q = outChild(procp[8]);
 	if (q == NULL || q != procp[8])
-		adderrbuf("ERROR: outChild(procp[8]) failed ");
+		printf("ERROR: outChild(procp[8]) failed ");
 	
 	/* Check removeChild */
 	q = removeChild(procp[0]);
 	if (q == NULL || q != procp[2])
-		adderrbuf("ERROR: removeChild(procp[0]) failed ");
+		printf("ERROR: removeChild(procp[0]) failed ");
 	
 	q = removeChild(procp[7]);
 	if (q == NULL || q != procp[9])
-		adderrbuf("ERROR: removeChild(procp[7]) failed ");
+		printf("ERROR: removeChild(procp[7]) failed ");
 	
 	q = removeChild(procp[0]);
 	if (q == NULL || q != procp[3])
-		adderrbuf("ERROR: removeChild(procp[0]) failed ");
+		printf("ERROR: removeChild(procp[0]) failed ");
 
 	q = removeChild(procp[0]);
 	if (q == NULL || q != procp[7])
-		adderrbuf("ERROR: removeChild(procp[0]) failed ");
+		printf("ERROR: removeChild(procp[0]) failed ");
 	
 	
 	if (removeChild(procp[0]) != NULL)
-		adderrbuf("ERROR: removeChild(): removes too many children   ");
+		printf("ERROR: removeChild(): removes too many children   ");
 
 	if (!emptyChild(procp[0]))
-	    adderrbuf("ERROR: emptyChild(procp[0]): unexpected FALSE   ");
+	    printf("ERROR: emptyChild(procp[0]): unexpected FALSE   ");
 	    
-	addokbuf("Test: insertChild(), removeChild() and emptyChild() OK   \n");
-	addokbuf("Testing process tree module OK      \n");
+	printf("Test: insertChild(), removeChild() and emptyChild() OK   \n");
+	printf("Testing process tree module OK      \n");
 
 	 
 	freePcb(procp[0]);
@@ -356,56 +356,56 @@ int main() {
 	
 	/* check ASL */
 	initASL();
-	addokbuf("Initializing active semaphore list   \n");
+	printf("Initializing active semaphore list   \n");
 
 	/* check removeBlocked and insertBlocked */
-	addokbuf(" Test insertBlocked(): test #1 started  \n");
+	printf(" Test insertBlocked(): test #1 started  \n");
 	for (i = 10; i < MAXPROC; i++) {
 		procp[i] = allocPcb();
 		if (insertBlocked(&sem[i], procp[i]))
-			adderrbuf("ERROR: insertBlocked() test#1: unexpected TRUE   ");
+			printf("ERROR: insertBlocked() test#1: unexpected TRUE   ");
 	}
 
-	addokbuf("Test insertBlocked(): test #2 started  \n");
+	printf("Test insertBlocked(): test #2 started  \n");
 	for (i = 0; i < 10; i++) {
 		procp[i] = allocPcb();
 		if (insertBlocked(&sem[i], procp[i]))
-			adderrbuf("ERROR:insertBlocked() test #2: unexpected TRUE   ");
+			printf("ERROR:insertBlocked() test #2: unexpected TRUE   ");
 	}
-#if 0
+
 	/* check if semaphore descriptors are returned to the free list */
 	p = removeBlocked(&sem[11]);
 	if (insertBlocked(&sem[11],p))
-		adderrbuf("ERROR: removeBlocked(): fails to return to free list   ");
+		printf("ERROR: removeBlocked(): fails to return to free list   ");
 
 	if (insertBlocked(&sem[MAXSEM], procp[9]) == FALSE)
-		adderrbuf("ERROR: insertBlocked(): inserted more than MAXPROC   ");
+		printf("ERROR: insertBlocked(): inserted more than MAXPROC   ");
 	
-	addokbuf("Test removeBlocked(): test started   \n");
+	printf("Test removeBlocked(): test started   \n");
 	for (i = 10; i< MAXPROC; i++) {
 		q = removeBlocked(&sem[i]);
 		if (q == NULL)
-			adderrbuf("ERROR: removeBlocked(): wouldn't remove   ");
+			printf("ERROR: removeBlocked(): wouldn't remove   ");
 		if (q != procp[i])
-			adderrbuf("ERROR: removeBlocked(): removed wrong element   ");
+			printf("ERROR: removeBlocked(): removed wrong element   ");
 
 	}
 
 	if (removeBlocked(&sem[11]) != NULL)
-		adderrbuf("ERROR: removeBlocked(): removed nonexistent blocked proc   ");
-	
-	addokbuf("Test insertBlocked() and removeBlocked() ok   \n");
+		printf("ERROR: removeBlocked(): removed nonexistent blocked proc   ");
+#if 0	
+	printf("Test insertBlocked() and removeBlocked() ok   \n");
 
 	if (headBlocked(&sem[11]) != NULL)
-		adderrbuf("ERROR: headBlocked(): nonNULL for a nonexistent queue   ");
+		printf("ERROR: headBlocked(): nonNULL for a nonexistent queue   ");
 	
 	if ((q = headBlocked(&sem[9])) == NULL)
-		adderrbuf("ERROR: headBlocked(1): NULL for an existent queue   ");
+		printf("ERROR: headBlocked(1): NULL for an existent queue   ");
 	if (q != procp[9])
-		adderrbuf("ERROR: headBlocked(1): wrong process returned   ");
+		printf("ERROR: headBlocked(1): wrong process returned   ");
 	p = outBlocked(q);
 	if (p != q)
-		adderrbuf("ERROR: outBlocked(1): couldn't remove from valid queue   ");
+		printf("ERROR: outBlocked(1): couldn't remove from valid queue   ");
 
 	/* Creating a 2-layer tree */
 	insertChild(procp[0], procp[1]);
@@ -417,22 +417,22 @@ int main() {
 	outChildBlocked(procp[0]);
 	
 	if (headBlocked(&sem[0]) != NULL)
-		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (0)  ");
+		printf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (0)  ");
 	if (headBlocked(&sem[1]) != NULL)
-		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (1)  ");
+		printf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (1)  ");
 	if (headBlocked(&sem[2]) != NULL)
-		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue  (2) ");
+		printf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue  (2) ");
 	if (headBlocked(&sem[3]) != NULL)
-		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (3)  ");
+		printf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (3)  ");
 	if (headBlocked(&sem[4]) != NULL)
-			adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (4)  ");	
+			printf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (4)  ");	
 	if (headBlocked(&sem[5]) == NULL)
-			adderrbuf("ERROR: outChildBlocked(): NULL for an existent queue  (5) ");	
+			printf("ERROR: outChildBlocked(): NULL for an existent queue  (5) ");	
 	
-	addokbuf("Test headBlocked() and outBlocked(): OK   \n");
+	printf("Test headBlocked() and outBlocked(): OK   \n");
 	
-	addokbuf("ASL module OK   \n");
-	addokbuf("So Long and Thanks for All the Fish\n");
+	printf("ASL module OK   \n");
+	printf("So Long and Thanks for All the Fish\n");
 #endif  
 	return 0;
 }
