@@ -144,7 +144,7 @@ void addokbuf(char *strp) {
 
 /* This function places the specified character string in errbuf and
  *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message */ 
+ *	the system shuts down with a panic message */  
 void adderrbuf(char *strp) {
 
 	termprint(strp, 0);
@@ -305,7 +305,7 @@ int main() {
 	
 	if (emptyChild(procp[7]))
 		adderrbuf("ERROR: emptyChild(procp[0]): unexpected TRUE   ");	
-#if 0	/* Check outChild */
+	/* Check outChild */
 	q = outChild(procp[1]);
 	if (q == NULL || q != procp[1])
 		adderrbuf("ERROR: outChild(procp[1]) failed ");
@@ -372,7 +372,7 @@ int main() {
 		if (insertBlocked(&sem[i], procp[i]))
 			adderrbuf("ERROR:insertBlocked() test #2: unexpected TRUE   ");
 	}
-
+#if 0
 	/* check if semaphore descriptors are returned to the free list */
 	p = removeBlocked(&sem[11]);
 	if (insertBlocked(&sem[11],p))

@@ -35,13 +35,10 @@ all: kernel.core.umps
 kernel.core.umps: kernel
 	umps2-elf2umps -k $<
 
-kernel: pcb.o crtso.o libumps.o p1test_rikaya_v0.o
+kernel: pcb.o crtso.o libumps.o p1test_rikaya_v0.o asl.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-pcb.o: src/pcb.c
-	$(CC) -c $< $(CFLAGS)
-
-p1test_rikaya_v0.o: src/p1test_rikaya_v0.c
+%.o: src/%.c
 	$(CC) -c $< $(CFLAGS)
 
 clean:

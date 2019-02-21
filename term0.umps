@@ -10,4 +10,9 @@ Test insertProcQ: OK. Inserted 10 elements
 Inserting...   
 Inserted 2 children of pcb0  
 Inserted 2 children of pcb7  
+Test: insertChild(), removeChild() and emptyChild() OK   
+Testing process tree module OK      
+Initializing active semaphore list   
+ Test insertBlocked(): test #1 started  
+Test insertBlocked(): test #2 started  
 System halted 

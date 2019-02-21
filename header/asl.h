@@ -1,7 +1,14 @@
 #ifndef ASL_H
 #define ASL_H
 
-#include "../header/types_rikaya.h"
+#include "const.h"
+#include "types_rikaya.h"
+#include "pcb.h"
+
+semd_t semd_table[MAXPROC] ;
+
+semd_t *semdFree_h ; //sentinella lista semafori liberi
+semd_t *semd_h ; //sentinella lista semafori attivi
 
 /* ASL handling functions */
 semd_t* getSemd(int *key);

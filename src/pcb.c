@@ -1,11 +1,8 @@
 #include "../header/pcb.h"
 
-//debugging variable, counts number of enqueued processes
-unsigned int enqueuedProc = 0 ;
-
 void initPcbs(void){
 
-    int i ;
+    unsigned int i ;
     struct list_head *iterator ;
 
     pcbfree_h = &pcbFree_table[0] ;
@@ -28,7 +25,7 @@ static void setlist_head(struct list_head list){
 
 pcb_t *allocPcb(void){  
 
-    int i ;
+    unsigned int i ;
     
 
     if (pcbfree_h != NULL){
@@ -50,7 +47,6 @@ pcb_t *allocPcb(void){
         lastPcb->priority = 0 ;
         setlist_head(lastPcb->p_child) ;
         setlist_head(lastPcb->p_sib) ;
-        /*forse anche nel tree andrà fatta stessa cosa*/
         if (pcbfree_h != lastPcb){
             list_del(&(lastPcb->p_next));
         }
@@ -144,6 +140,7 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
     }
     else {
         list_for_each(iterator, head){
+            //controlla che p sia presente nella coda
             if (container_of(iterator,pcb_t,p_next) == p){
                 list_del(iterator);
                 return p ;
@@ -168,17 +165,71 @@ int emptyChild(pcb_t *this){
 void insertChild(pcb_t *prnt, pcb_t *p){
 
     p->p_parent = prnt ;
-    //se non ha figli figlio
+    //se non ha figli
     if (emptyChild(prnt)){
         prnt->p_child.next = &(p->p_child) ;
         //inizializzo la lista dei sibling per trattarli come le code
         INIT_LIST_HEAD(&(p->p_sib));
     }
-    //altrimenti
     else {
         //assumo che il primo figlio sia la testa della lista di figli
         list_add_tail(&(p->p_sib),&(container_of(prnt->p_child.next,pcb_t,p_child)->p_sib)) ;
     }
 
 
+}
+
+pcb_t *removeChild(pcb_t *p){
+
+    pcb_t *firstChild ; //mantiene riferimento a ex primogenito per toglierlo dai fratelli
+
+    if (emptyChild(p)){
+        return NULL ;
+    }
+    else {
+        firstChild = container_of(p->p_child.next,pcb_t,p_child) ;
+        //elimina riferimento al padre
+        firstChild->p_parent = NULL ;
+
+        //se il primo figlio è l'ultimo, elimina riferimento a figli
+        if ((firstChild->p_sib.next == &(firstChild->p_sib)) && (firstChild->p_sib.prev == &(firstChild->p_sib))){
+            p->p_child.next = NULL ;
+        }
+        else {
+            //altrimenti il primo figlio diventa il prossimo
+            p->p_child.next = &(container_of(firstChild->p_sib.next,pcb_t,p_sib)->p_child) ;
+            //elimina riferimento ai fratelli
+            list_del(&(firstChild->p_sib));
+        }
+        
+        return firstChild ;
+    }
+}
+
+pcb_t *outChild(pcb_t *p){
+
+    if (p->p_parent == NULL){
+        return NULL ;
+    }
+    else {
+        //se non è il primogenito, non deve modificare p_child
+        if (p->p_parent->p_child.next != &(p->p_child)){
+            list_del(&(p->p_sib));
+            p->p_parent = NULL ;
+        }
+        else{
+            //potrebbe anche essere l'ultimo
+            if (p->p_sib.next == &(p->p_sib)){
+                p->p_parent->p_child.next = NULL ;
+                p->p_parent = NULL ;
+            }
+            else {
+                //p_child punta al figlio successivo
+                p->p_parent->p_child.next = &(container_of(p->p_sib.next,pcb_t,p_sib)->p_child) ;
+                p->p_parent = NULL;
+                list_del(&(p->p_sib));
+            }
+        }
+        return p ;
+    }
 }
