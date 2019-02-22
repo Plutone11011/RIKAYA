@@ -71,11 +71,16 @@ static void freeSemaphore(semd_t *sem){
             semd_h = NULL ;
         }
         else {
-            list_del(&(semd_h->s_next)) ;
+            if (sem == semd_h){
+                //il semaforo da liberare è il primo, quindi semd_h deve puntare a quello successivo
+                semd_h = container_of(semd_h->s_next.next,semd_t,s_next) ;
+            }
+            list_del(&(sem->s_next)) ;
         }
         //in entrambi i casi vengono aggiunti alla lista dei liberi
         if (semdFree_h == NULL){
             semdFree_h = sem ;
+            INIT_LIST_HEAD(&(semdFree_h->s_next));
         }
         else {
             list_add(&(sem->s_next),&(semdFree_h->s_next));
@@ -93,7 +98,8 @@ semd_t* getSemd(int *key){
         return searchSemaphoreByKey(key);
     }
 }
-
+//non usa getSemd a differenza delle altre funzioni perché ha un comportamento diverso
+//a seconda che l'ASL sia vuota o che il descrittore non sia presente nella ASL
 int insertBlocked(int *key,pcb_t* p){
 
     semd_t *newSem ;
@@ -153,7 +159,7 @@ pcb_t* removeBlocked(int *key){
     semd_t *removeSem ;
 
     if ((removeSem = getSemd(key)) == NULL){
-        //si ritorna null sia se la ASL è vuota sia se il descrittore non esiste
+        //ritorna null sia se la ASL è vuota sia se il descrittore non esiste
         return NULL ;
     }
     else {
@@ -163,4 +169,59 @@ pcb_t* removeBlocked(int *key){
         }
         return pcb_removed ;
     }
+}
+
+pcb_t* headBlocked(int *key){
+
+    semd_t *sem ;
+
+    if ((sem = getSemd(key)) == NULL){
+        return NULL ;
+    }
+    else {
+        return container_of(sem->s_procQ.next,pcb_t,p_next) ;
+    }
+}
+
+pcb_t* outBlocked(pcb_t *p){
+
+    pcb_t *pcb_removed ;
+    semd_t *removeSem ;
+
+    if ((removeSem = getSemd(p->p_semkey)) == NULL){
+        //ritorna null sia se la ASL è vuota sia se il descrittore non esiste
+        return NULL ;
+    }
+    else {
+        pcb_removed = outProcQ(&(removeSem->s_procQ),p) ;
+        if (emptyProcQ(&(removeSem->s_procQ))){
+            freeSemaphore(removeSem);
+        }
+        return pcb_removed ;
+    }
+}
+
+void outChildBlocked(pcb_t *p){
+
+    semd_t *removeSem ;
+
+    if ((removeSem = getSemd(p->p_semkey)) != NULL){
+        if (!emptyChild(p)){
+            //p ha figli quindi si ricorre su di essi
+            outChildBlocked(container_of(p->p_child.next,pcb_t,p_child));
+        }
+        else {
+            //quando il sottoalbero è stato attraversato in tutta la sua profondità
+            //si ricorre sui fratelli, finché il processo corrente è diverso dall'ultimo figlio 
+            if (&(container_of(p->p_sib.next,pcb_t,p_sib)->p_child) != container_of(p->p_sib.next,pcb_t,p_sib)->p_parent->p_child.next){
+                outChildBlocked(container_of(p->p_sib.next,pcb_t,p_sib)) ;
+            }
+        }
+        outProcQ(&(removeSem->s_procQ),p);
+        if (emptyProcQ(&(removeSem->s_procQ))){
+            freeSemaphore(removeSem);
+        }
+        outChild(p);
+    }
+
 }

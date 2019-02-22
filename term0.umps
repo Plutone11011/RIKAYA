@@ -15,4 +15,9 @@ Testing process tree module OK
 Initializing active semaphore list   
  Test insertBlocked(): test #1 started  
 Test insertBlocked(): test #2 started  
-kernel panic()
+Test removeBlocked(): test started   
+Test insertBlocked() and removeBlocked() ok   
+Test headBlocked() and outBlocked(): OK   
+ASL module OK   
+So Long and Thanks for All the Fish
+System halted 
