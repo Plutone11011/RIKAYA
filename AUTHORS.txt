@@ -1,0 +1,4 @@
+# Questo file contiene gli autori che hanno contribuito al progetto
+
+
+Lorenzo Borelli 0000789622
