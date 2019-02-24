@@ -79,6 +79,7 @@ static void freeSemaphore(semd_t *sem){
         }
         //in entrambi i casi vengono aggiunti alla lista dei liberi
         if (semdFree_h == NULL){
+            //va inizializzata
             semdFree_h = sem ;
             INIT_LIST_HEAD(&(semdFree_h->s_next));
         }
@@ -164,6 +165,7 @@ pcb_t* removeBlocked(int *key){
     }
     else {
         pcb_removed = removeProcQ(&(removeSem->s_procQ)) ;
+        //se la coda dei processi bloccati è vuota va liberato il semaforo
         if (emptyProcQ(&(removeSem->s_procQ))){
             freeSemaphore(removeSem);
         }
@@ -193,6 +195,7 @@ pcb_t* outBlocked(pcb_t *p){
         return NULL ;
     }
     else {
+        //analogo a removeBlocked, ma su un pcb qualunque
         pcb_removed = outProcQ(&(removeSem->s_procQ),p) ;
         if (emptyProcQ(&(removeSem->s_procQ))){
             freeSemaphore(removeSem);
@@ -212,11 +215,14 @@ void outChildBlocked(pcb_t *p){
         }
         else {
             //quando il sottoalbero è stato attraversato in tutta la sua profondità
-            //si ricorre sui fratelli, finché il processo corrente è diverso dall'ultimo figlio 
+            //si ricorre sui fratelli, finché il processo corrente è diverso dall'ultimo figlio
+            //cioè quando il next del pcb corrente è diverso dal primo figlio (condizione testata) 
             if (&(container_of(p->p_sib.next,pcb_t,p_sib)->p_child) != container_of(p->p_sib.next,pcb_t,p_sib)->p_parent->p_child.next){
                 outChildBlocked(container_of(p->p_sib.next,pcb_t,p_sib)) ;
             }
         }
+        //la ricorsione garantisce che per ogni processo si controlli se esiste il suo semaforo
+        //e se ha figli
         outProcQ(&(removeSem->s_procQ),p);
         if (emptyProcQ(&(removeSem->s_procQ))){
             freeSemaphore(removeSem);

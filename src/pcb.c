@@ -105,6 +105,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
                 break ;
             }
             //se invece p ha priorità minima
+            //vuol dire che si è arrivati in fondo alla lista
             else if (iterator->next == head){
                 list_add_tail(&(p->p_next), head);
                 break ;
@@ -152,8 +153,7 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
 
 int emptyChild(pcb_t *this){
 
-    /*non si può usare la stessa api delle code, perché nel test si invoca
-    emptyChild senza prima inizializzare la lista vuota, come invece si fa per le code*/
+    /*per p_child non si usa l'API listx perché sarebbe ridondante essendoci già il puntatore al padre*/
     if (this->p_child.next == NULL){
         return 1 ;
     }
