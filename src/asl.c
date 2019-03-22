@@ -204,6 +204,15 @@ pcb_t* outBlocked(pcb_t *p){
     }
 }
 
+void outChildBlocked(pcb_t *p) {
+    pcb_t *child;
+    list_for_each_entry(child, &p->p_child, p_sib) {
+        outChildBlocked(child); // Chiamata ricorsiva
+    }
+    outBlocked(p); // Azione da portare avanti su tutti i parenti
+}
+
+/*MM funzione errata e un po' confusa; basta molto meno
 void outChildBlocked(pcb_t *p){
 
     semd_t *removeSem ;
@@ -230,4 +239,4 @@ void outChildBlocked(pcb_t *p){
         outChild(p);
     }
 
-}
+}*/
