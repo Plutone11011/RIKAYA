@@ -409,9 +409,9 @@ int main() {
 
 	/* Creating a 2-layer tree */
 	insertChild(procp[0], procp[1]);
-	insertChild(procp[0], procp[2]);
-	insertChild(procp[0], procp[3]);
-	insertChild(procp[3], procp[4]);
+	insertChild(procp[1], procp[2]);
+	insertChild(procp[1], procp[3]);
+	insertChild(procp[2], procp[4]);
 	
 	/* Testing outChildBlocked */
 	outChildBlocked(procp[0]);
