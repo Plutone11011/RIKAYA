@@ -143,7 +143,7 @@ void addokbuf(char *strp) {
 
 /* This function places the specified character string in errbuf and
  *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message */   
+ *	the system shuts down with a panic message */    
 void adderrbuf(char *strp) {
 
 	termprint(strp, 0);
@@ -409,26 +409,31 @@ int main() {
 
 	/* Creating a 2-layer tree */
 	insertChild(procp[0], procp[1]);
-	insertChild(procp[0], procp[2]);
-	insertChild(procp[0], procp[3]);
-	insertChild(procp[3], procp[4]);
+	insertChild(procp[1], procp[2]);
+	insertChild(procp[1], procp[3]);
+	insertChild(procp[2], procp[4]);
 	
 	/* Testing outChildBlocked */
 	outChildBlocked(procp[0]);
-	
+
 	if (headBlocked(&sem[0]) != NULL)
 		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (0)  ");
+
 	if (headBlocked(&sem[1]) != NULL)
 		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (1)  ");
+
 	if (headBlocked(&sem[2]) != NULL)
 		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue  (2) ");
+
 	if (headBlocked(&sem[3]) != NULL)
 		adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (3)  ");
+
 	if (headBlocked(&sem[4]) != NULL)
 			adderrbuf("ERROR: outChildBlocked(): nonNULL for a nonexistent queue (4)  ");	
+
 	if (headBlocked(&sem[5]) == NULL)
 			adderrbuf("ERROR: outChildBlocked(): NULL for an existent queue  (5) ");	
-	
+
 	addokbuf("Test headBlocked() and outBlocked(): OK   \n");
 	
 	addokbuf("ASL module OK   \n");

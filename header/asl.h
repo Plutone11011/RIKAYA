@@ -5,10 +5,10 @@
 #include "types_rikaya.h"
 #include "pcb.h"
 
-semd_t semd_table[MAXSEM] ;
+extern semd_t semd_table[MAXSEM] ;
 
-semd_t *semdFree_h ; //sentinella lista semafori liberi
-semd_t *semd_h ; //sentinella lista semafori attivi
+extern semd_t *semdFree_h ; //sentinella lista semafori liberi
+extern semd_t *semd_h ; //sentinella lista semafori attivi
 
 /* ASL handling functions */
 semd_t* getSemd(int *key);

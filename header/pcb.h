@@ -3,9 +3,8 @@
 #include "const.h"
 #include "types_rikaya.h"
 
-pcb_t *pcbfree_h ;
-
-pcb_t pcbFree_table[MAXPROC];
+extern pcb_t *pcbfree_h ;
+extern pcb_t pcbFree_table[MAXPROC] ;
 
 /* PCB handling functions */
 

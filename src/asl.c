@@ -1,5 +1,10 @@
 #include "../header/asl.h"
 
+semd_t semd_table[MAXSEM] ;
+
+semd_t *semdFree_h ;
+semd_t *semd_h ;
+
 void initASL(){
     unsigned int i ;
     struct list_head *iterator ;
@@ -204,6 +209,29 @@ pcb_t* outBlocked(pcb_t *p){
     }
 }
 
+void outChildBlocked(pcb_t *p) {
+    
+    pcb_t *child, *sib;
+    
+    if (!emptyChild(p)){
+        child = container_of(p->p_child.next,pcb_t,p_child) ;
+        outChildBlocked(child);
+        sib = child ;
+        //condizione terminazione loop dei sibling su list is last
+        while (!list_is_last(&sib->p_sib,&child->p_sib)){
+
+            sib = container_of(child->p_sib.next,pcb_t,p_sib);
+            outChildBlocked(sib);
+        }
+        
+    }
+    outBlocked(p);
+        
+    
+     
+}
+
+/*MM funzione errata e un po' confusa; basta molto meno
 void outChildBlocked(pcb_t *p){
 
     semd_t *removeSem ;
@@ -230,4 +258,4 @@ void outChildBlocked(pcb_t *p){
         outChild(p);
     }
 
-}
+}*/

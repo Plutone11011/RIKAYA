@@ -1,5 +1,9 @@
 #include "../header/pcb.h"
 
+pcb_t *pcbfree_h ;
+
+pcb_t pcbFree_table[MAXPROC];
+
 void initPcbs(void){
 
     unsigned int i ;
@@ -153,27 +157,37 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
 
 int emptyChild(pcb_t *this){
 
-    /*per p_child non si usa l'API listx perché sarebbe ridondante essendoci già il puntatore al padre*/
     if (this->p_child.next == NULL){
+        //bisogna inizializzare la lista vuota dei figli
+        //la sentinella è la radice del sottoalbero
+        INIT_LIST_HEAD(&(this->p_child));
         return 1 ;
     }
     else {
-        return 0 ;
+        //non ha figli se è la sentinella ma anche
+        //se il pcb puntato dal parent del next child 
+        //è diverso da sé stesso   
+        return list_empty(&(this->p_child)) || (container_of(this->p_child.next,pcb_t,p_child)->p_parent != this) ;
     }
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p){
 
     p->p_parent = prnt ;
-    //se non ha figli
+    //inizializzo la lista dei sibling per trattarli come le code
+    INIT_LIST_HEAD(&(p->p_sib));
+    //controllo se questo è il primo nodo
+    //della lista dei figli
     if (emptyChild(prnt)){
-        prnt->p_child.next = &(p->p_child) ;
-        //inizializzo la lista dei sibling per trattarli come le code
-        INIT_LIST_HEAD(&(p->p_sib));
+        __list_add(&(p->p_child),&(prnt->p_child),prnt->p_child.next);
+        
     }
     else {
-        //assumo che il primo figlio sia la testa della lista di figli
+        
+        //prnt ha figli e quindi si aggiunge p alla lista dei fratelli
         list_add_tail(&(p->p_sib),&(container_of(prnt->p_child.next,pcb_t,p_child)->p_sib)) ;
+    
+
     }
 
 
@@ -190,18 +204,16 @@ pcb_t *removeChild(pcb_t *p){
         firstChild = container_of(p->p_child.next,pcb_t,p_child) ;
         //elimina riferimento al padre
         firstChild->p_parent = NULL ;
-
-        //se il primo figlio è l'ultimo, elimina riferimento a figli
-        if ((firstChild->p_sib.next == &(firstChild->p_sib)) && (firstChild->p_sib.prev == &(firstChild->p_sib))){
-            p->p_child.next = NULL ;
+        //cancella figlio dalla lista dei figli del padre
+        list_del(&(firstChild->p_child));
+        //aggiunge fratello successivo a lista dei figli
+        //solo se non è l'ultimo
+        if (!list_empty(&(firstChild->p_sib))){
+            __list_add(&(container_of(firstChild->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_child),p->p_child.next);
         }
-        else {
-            //altrimenti il primo figlio diventa il prossimo
-            p->p_child.next = &(container_of(firstChild->p_sib.next,pcb_t,p_sib)->p_child) ;
-            //elimina riferimento ai fratelli
-            list_del(&(firstChild->p_sib));
-        }
-        
+        //elimina riferimento ai fratelli
+        list_del(&(firstChild->p_sib));
+      
         return firstChild ;
     }
 }
@@ -218,17 +230,15 @@ pcb_t *outChild(pcb_t *p){
             p->p_parent = NULL ;
         }
         else{
-            //potrebbe anche essere l'ultimo
-            if (p->p_sib.next == &(p->p_sib)){
-                p->p_parent->p_child.next = NULL ;
-                p->p_parent = NULL ;
+            
+            list_del(&(p->p_child));
+            //aggiunge fratello successivo a lista dei figli
+            //solo se non è l'ultimo
+            if (!list_empty(&(p->p_sib))){
+                __list_add(&(container_of(p->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_parent->p_child),p->p_parent->p_child.next);
             }
-            else {
-                //p_child punta al figlio successivo
-                p->p_parent->p_child.next = &(container_of(p->p_sib.next,pcb_t,p_sib)->p_child) ;
-                p->p_parent = NULL;
-                list_del(&(p->p_sib));
-            }
+            list_del(&(p->p_sib));
+            p->p_parent = NULL ;
         }
         return p ;
     }
