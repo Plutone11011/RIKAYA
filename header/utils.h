@@ -1,2 +1,2 @@
 
-void itoa(int x, char aux[]);
+void itoa(unsigned int x, char aux[]);

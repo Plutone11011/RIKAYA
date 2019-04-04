@@ -35,7 +35,7 @@ all: kernel.core.umps
 kernel.core.umps: kernel
 	umps2-elf2umps -k $<
 
-kernel: pcb.o crtso.o libumps.o p1test_rikaya_v0.o asl.o
+kernel: pcb.o crtso.o libumps.o p1.5test.o asl.o interrupts.o utils.o main.o handler.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 %.o: src/%.c

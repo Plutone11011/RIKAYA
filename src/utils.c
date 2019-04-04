@@ -1,7 +1,7 @@
 #include "../header/utils.h"
 
 /* debug itoa per numeri decimali */
-void itoa(int x, char aux[]){
+void itoa(unsigned int x, char aux[]){
 	int i = 0, j = 0 ;
 
 	if (x == 0){

@@ -1,8 +1,15 @@
+#ifndef P1_5TEST_H
+#define P1_5TEST_H
+
 #include "const.h"
 #include "listx.h"
 #include "libumps.h"
 #include "arch.h"
 #include "pcb.h"
+#include "asl.h"
+#include "cp0.h"
+#include "interrupts.h"
+#include "handler.h"
 
 #define TRANSMITTED 5
 #define TRANSTATUS 2
@@ -22,6 +29,16 @@
 #define RAMBASE *((unsigned int *)0x10000000)
 #define RAMSIZE *((unsigned int *)0x10000004)
 #define RAMTOP (RAMBASE + RAMSIZE)
+#define FRAMESIZE 4096
+/*old e new area*/
+#define INTERRUPT_OLDAREA RAMBASE
+#define INTERRUPT_NEWAREA 0x2000008C
+#define TLB_OLDAREA 0x20000118
+#define TLB_NEWAREA 0x200001A4
+#define PROGRAMTRAP_OLDAREA 0x20000230
+#define PROGRAMTRAP_NEWAREA 0x200002BC
+#define SYSCALL_OLDAREA 0x20000348
+#define SYSCALL_NEWAREA 0x200003D4
 
 #define SYS3 3
 #define STEPS 6
@@ -53,3 +70,5 @@ void log_process_order(int process);
 void test1();
 void test2();
 void test3();
+
+#endif
