@@ -12,7 +12,7 @@ typedef struct pcb_t {
 	struct list_head	p_next;
 
 	/*process tree fields */
-	struct pcb_t		*p_parent;
+	struct pcb_t			*p_parent;
 	struct list_head	p_child,
 				p_sib;
 
@@ -21,7 +21,7 @@ typedef struct pcb_t {
 
 	/* process priority */
 	int			priority;
-
+	int original_priority ;
 	/* key of the semaphore on which the process is eventually blocked */
 	int			*p_semkey;
 } pcb_t;
