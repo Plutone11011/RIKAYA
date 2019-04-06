@@ -8,7 +8,7 @@ void interrupt_handler(){
     //interrupt timer
     //set timer probabilmente setta il timer locale
     //del processore (ma se è così settarlo nel main equivale a settarlo per il processo?)
-    if (cause & CAUSE_IP(2)){
+    if (cause & CAUSE_IP(1)){
         termprint("Timer",0);
         if (!emptyProcQ(&ready_queue)){
             pcb_t *ready_pcb ;

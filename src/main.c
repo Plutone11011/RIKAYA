@@ -7,30 +7,27 @@ void init_new_area(unsigned int new_address, unsigned int handler){
     new_state->gpr[26] = RAMTOP ;
 
     
-    //new_state->status &= ~STATUS_IEc ;//interrupt
-    //new_state->status &= ~STATUS_KUc ;//kernel mode
-    //new_state->status &= ~STATUS_VMc ;//vm
+    new_state->status &= ~STATUS_IEc ;//interrupt
+    new_state->status &= ~STATUS_KUc ;//kernel mode
+    new_state->status &= ~STATUS_VMc ;//vm
     new_state->status |= STATUS_TE ;
 }
 
 void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
 
-    char buf[10];
+    //char buf[10];
     process->priority = n ;
     process->original_priority = n ;
     process->p_s.pc_epc = addr_process ;
     process->p_s.gpr[26] = RAMTOP - (FRAMESIZE*n) ;
 
-
+    
     //isola l'interrupt mask e accende il bit dell'interval timer
-    process->p_s.status |= (process->p_s.status & STATUS_IM_MASK) | STATUS_IM(2) ;
-    //process->p_s.status &= ~STATUS_KUc ;
-    //process->p_s.status &= ~STATUS_VMc ;
+    process->p_s.status |= (process->p_s.status & STATUS_IM_MASK) | STATUS_IM(1) ;
+    process->p_s.status &= ~STATUS_KUc ;
+    process->p_s.status &= ~STATUS_VMc ;
     process->p_s.status |= STATUS_IEc ;//abilita interrupt 
-    process->p_s.status |= STATUS_TE ; //abilita timer
-    itoa(process->p_s.status,buf);
-    termprint(buf,0);
-    termprint("\n",0);
+    process->p_s.status |= STATUS_TE ;
 
     insertProcQ(&ready_queue,process);
     ready_processes++ ;
