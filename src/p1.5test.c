@@ -188,8 +188,9 @@ void test2()
 
 void test3()
 {
-    int i = 0;
+    int j,i = 0;
     termprint("Entering test3!\n", 0);
+    
     test3_baton[0] = 1;
     for (i = 0; i < STEPS; i++)
     {

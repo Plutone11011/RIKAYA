@@ -15,7 +15,7 @@ void init_new_area(unsigned int new_address, unsigned int handler){
 
 void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
 
-    //char buf[10];
+    
     process->priority = n ;
     process->original_priority = n ;
     process->p_s.pc_epc = addr_process ;
@@ -23,11 +23,12 @@ void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
 
     
     //isola l'interrupt mask e accende il bit dell'interval timer
-    process->p_s.status |= (process->p_s.status & STATUS_IM_MASK) | STATUS_IM(1) ;
-    process->p_s.status &= ~STATUS_KUc ;
-    process->p_s.status &= ~STATUS_VMc ;
-    process->p_s.status |= STATUS_IEc ;//abilita interrupt 
+    
+    process->p_s.status |= STATUS_IM(1) ;
+    process->p_s.status &= (~STATUS_KUc) ;
+    process->p_s.status &= (~STATUS_VMc) ; 
     process->p_s.status |= STATUS_TE ;
+    process->p_s.status |= STATUS_IEp ;
 
     insertProcQ(&ready_queue,process);
     ready_processes++ ;
@@ -49,6 +50,8 @@ int main(){
     init_process(1,(unsigned int)test1,&p1);
     init_process(2,(unsigned int)test2,&p2);
     init_process(3,(unsigned int)test3,&p3);
+    
+    //FORK(p3.p_s.entry_hi,p3.p_s.status,p3.p_s.pc_epc,&p3.p_s);
     schedule();
     
     return 0 ;

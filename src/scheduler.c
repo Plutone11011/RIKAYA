@@ -1,12 +1,12 @@
 #include "../header/scheduler.h"
 
 void schedule(){
-
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
     if (ready_processes > 0){
 
         pcb_t *pcb_to_run = removeProcQ(&ready_queue);
+
         ready_processes-- ;
 
         if (running_process != NULL){
@@ -17,9 +17,10 @@ void schedule(){
             running_process->priority = running_process->original_priority ;
         }
         running_process = pcb_to_run ;
-        log_process_order(running_process->original_priority);
+        //log_process_order(running_process->original_priority);
         setTIMER(TIMESLICE * TIME_SCALE);
         LDST(&running_process->p_s);
+        //HALT();
     }
     else {
         //se non ci sono processi ready
