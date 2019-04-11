@@ -9,8 +9,10 @@
 #include "asl.h"
 #include "cp0.h" 
 
+#define TERMINATE_PROCESS 3
+
 void programtrap_handler();
 void tlb_handler();
-void syscall_handler();
+void SYS_handler();
 
 #endif
