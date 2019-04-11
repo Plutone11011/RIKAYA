@@ -5,7 +5,7 @@ void TerminateProcess (pcb_t *p) {
     //Nel caso in cui si cerchi di terminare il processo in esecuzione
     if (p == running_process) running_process = NULL;
     //Se p è nella ready_queue diminuiamo il numero di processi ready
-    if (outProcQ(ready_queue, p) != NULL) ready_processes--;
+    if (outProcQ(&ready_queue, p) != NULL) ready_processes--;
     freePcb(p);
 }
 
