@@ -12,7 +12,7 @@ void TerminateProcess (pcb_t *p) {
 void SYS_handler (int TYPE) {
     switch (TYPE) {
         case TERMINATE_PROCESS: {
-            TerminateProcess(running_process); 
+            TerminateProcess(pid); 
         }
             break;
     
