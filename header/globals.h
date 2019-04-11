@@ -33,7 +33,7 @@
 #define SYSCALL_NEWAREA 0x200003D4
 #define TIMESLICE 3000U
 
-extern struct list_head *ready_queue ;
+extern struct list_head ready_queue ;
 extern int ready_processes ;
 extern pcb_t *running_process ;
 
