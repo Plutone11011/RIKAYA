@@ -23,5 +23,4 @@ void itoa(unsigned int x, char aux[]){
 		aux[i] = aux[i] ^ aux[j] ;
 		j--;
 	}
-	
 }
