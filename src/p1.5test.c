@@ -153,7 +153,7 @@ void test1()
             ;
 
         termprint(toprint[i * 3], 0);
-        delay_ms((getRANDOM() >> 8) * 100);
+        //delay_ms((getRANDOM() >> 8) * 100);
         test1_baton[i] = 1;
     }
     while (test3_baton[STEPS] == 0)
@@ -175,7 +175,7 @@ void test2()
             ;
 
         termprint(toprint[i * 3 + 1], 0);
-        delay_ms((getRANDOM() >> 8) * 100);
+        //delay_ms((getRANDOM() >> 8) * 100);
         test2_baton[i] = 1;
     }
     while (test1_baton[i] == 0)
@@ -188,7 +188,7 @@ void test2()
 
 void test3()
 {
-    int j,i = 0;
+    int i = 0;
     termprint("Entering test3!\n", 0);
     
     test3_baton[0] = 1;
@@ -198,7 +198,7 @@ void test3()
             ;
 
         termprint(toprint[i * 3 + 2], 0);
-        delay_ms((getRANDOM() >> 8) * 100);
+        //delay_ms((getRANDOM() >> 8) * 100);
         test3_baton[i + 1] = 1;
     }
     while (test2_baton[STEPS] == 0)
@@ -206,6 +206,6 @@ void test3()
     termprint("Good job from test3\n", 0);
     termprint(gantt_diagram, 0);
     termprint("\n", 0);
-    SYSCALL(SYS3, 0, 0, 0);
+    //SYSCALL(SYS3, 0, 0, 0);
     ready_processes-- ;
 }

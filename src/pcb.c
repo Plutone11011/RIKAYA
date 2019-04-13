@@ -103,10 +103,23 @@ void insertProcQ(struct list_head *head, pcb_t *p){
     else {
         list_for_each(iterator,head){
             //se la priorità corrente è minore di quella di p
-            if ((container_of(iterator,pcb_t,p_next))->priority <= p->priority){
+            if ((container_of(iterator,pcb_t,p_next))->priority < p->priority){
                 //allora lo si inserisce tra il corrente e il precendente
                 __list_add(&(p->p_next),iterator->prev, iterator);
                 break ;
+            }
+            else if ((container_of(iterator,pcb_t,p_next))->priority == p->priority){
+                //lo inserisco in fondo a quelli con priorità uguale, 
+                //in modo che tra tutti sia il meno recente
+                //ad essere servito
+                if ((container_of(iterator->next,pcb_t,p_next))->priority == p->priority){
+                    continue ;
+                }
+                else {
+                    __list_add(&(p->p_next),iterator, iterator->next);
+                    break ;
+                }
+
             }
             //se invece p ha priorità minima
             //vuol dire che si è arrivati in fondo alla lista

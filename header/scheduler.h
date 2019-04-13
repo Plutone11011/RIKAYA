@@ -13,5 +13,6 @@
 
 
 void schedule();
+void state_copy(state_t *dest, state_t *src);
 
 #endif

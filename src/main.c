@@ -36,10 +36,11 @@ void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
 
 int main(){
 
+    //char buf[10] ;
     pcb_t p1, p2, p3 ;
     init_new_area(INTERRUPT_NEWAREA,(unsigned int)interrupt_handler);
     init_new_area(PROGRAMTRAP_NEWAREA,(unsigned int)programtrap_handler);
-    init_new_area(SYSCALL_NEWAREA,(unsigned int)syscall_handler);
+    init_new_area(SYSCALL_NEWAREA,(unsigned int)SYS_handler);
     init_new_area(TLB_NEWAREA,(unsigned int)tlb_handler);
 
 
@@ -51,8 +52,10 @@ int main(){
     init_process(2,(unsigned int)test2,&p2);
     init_process(3,(unsigned int)test3,&p3);
     
+    //itoa(p2.p_s.pc_epc,buf);
+    //termprint(buf,0);
     //FORK(p3.p_s.entry_hi,p3.p_s.status,p3.p_s.pc_epc,&p3.p_s);
-    schedule();
+    schedule(NULL);
     
     return 0 ;
 }

@@ -4,6 +4,7 @@
 #include "types_rikaya.h"
 
 #define TRANSMITTED 5
+#define RECEIVED 5
 #define TRANSTATUS 2
 #define ACK 1
 #define PRINTCHR 2

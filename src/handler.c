@@ -9,7 +9,9 @@ void TerminateProcess (pcb_t *p) {
     freePcb(p);
 }
 
-void SYS_handler (int TYPE) {
+
+void SYS_handler () {
+    /*
     switch (TYPE) {
         case TERMINATE_PROCESS: {
             TerminateProcess(pid); 
@@ -19,12 +21,15 @@ void SYS_handler (int TYPE) {
         default:
             break;
     }
+    */
 }
 
 void programtrap_handler(){
-    PANIC();
+    termprint("pg trap",0);
+    //PANIC();
 }
 
 void tlb_handler(){
-    PANIC();
+    termprint("tlb trap",0);
+    //PANIC();
 }
