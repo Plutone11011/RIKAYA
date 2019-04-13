@@ -38,20 +38,3 @@ void schedule(){
     }
 
 }
-
-
-//copia src in dest
-void state_copy(state_t *dest, state_t *src){
-	
-	int i;
-	dest->cause = src->cause ;
-	dest->entry_hi = src->entry_hi ;
-	dest->hi = src->hi ;
-	dest->lo = src->lo ;
-	dest->pc_epc = src->pc_epc ;
-	dest->pc_epc -= 4 ;
-	dest->status = src->status ;
-	for (i = 0; i < STATE_GPR_LEN ; i++){
-		dest->gpr[i] = src->gpr[i] ;
-	}
-}
