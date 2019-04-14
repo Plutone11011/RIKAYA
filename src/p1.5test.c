@@ -1,15 +1,15 @@
 #include "../header/p1.5test.h"
 
 
-int test1_baton[STEPS + 1] = {0};
-int test2_baton[STEPS + 1] = {0};
-int test3_baton[STEPS + 1] = {0};
+int test1_baton[STEPS + 1] = {0,0,0,0,0,0,0};
+int test2_baton[STEPS + 1] = {0,0,0,0,0,0,0};
+int test3_baton[STEPS + 1] = {0,0,0,0,0,0,0};
 
 
 
 char gantt_diagram[GANTT_SIZE] = {0};
 
-
+/*
 static unsigned int get_microseconds()
 {
     return TOD_LO / TIME_SCALE;
@@ -22,7 +22,7 @@ static void delay_ms(unsigned int ms)
     while (get_microseconds() - start <= ms * 1000)
         ;
 }
-
+*/
 /******************************************************************************
  * I/O Routines to write on a terminal
  ******************************************************************************/
@@ -147,7 +147,7 @@ char *toprint[] = {
 void test1()
 {
     
-    int i ;
+    int i = 0 ;
     //termprint("Entering test1!\n", 0);
     for (i = 0; i < STEPS; i++)
     {
@@ -160,15 +160,15 @@ void test1()
     }
     while (test3_baton[STEPS] == 0)
         ;
-    termprint("Good job from test1\n", 0);
+    //termprint("Good job from test1\n", 0);
     test1_baton[STEPS] = 1;
-    //SYSCALL(SYS3, 0, 0, 0);    
+    SYSCALL(SYS3, 0, 0, 0);    
     
 }
 
 void test2()
 {
-    int i ;
+    int i = 0 ;
     //termprint("Entering test2!\n", 0);
     for (i = 0; i < STEPS; i++)
     {
@@ -181,36 +181,29 @@ void test2()
     }
     while (test1_baton[i] == 0)
         ;
-    termprint("Good job from test2\n", 0);
+    //termprint("Good job from test2\n", 0);
     test2_baton[STEPS] = 1;
     SYSCALL(SYS3, 0, 0, 0);
 }
 
 void test3()
 {   
-    //char buf[10];
-    int i;
+    int i = 0;
     //termprint("Entering test3!\n", 0);
     
     test3_baton[0] = 1;
     for (i = 0; i < STEPS; i++)
     {
-        //itoa(i,buf);
-        //termprint(buf,0);
         while (test2_baton[i] == 0){
-            //itoa(i,buf);
-            //termprint(buf,0);
         }
-        //itoa(i,buf);
-        //termprint(buf,0);
         termprint(toprint[i * 3 + 2], 0);
         //delay_ms((getRANDOM() >> 8) * 100);
         test3_baton[i + 1] = 1;
     }
     while (test2_baton[STEPS] == 0)
         ;
-    termprint("Good job from test3\n", 0);
+    //termprint("Good job from test3\n", 0);
     termprint(gantt_diagram, 0);
-    termprint("\n", 0);
-    //SYSCALL(SYS3, 0, 0, 0);
+    //termprint("\n", 0);
+    SYSCALL(SYS3, 0, 0, 0);
 }

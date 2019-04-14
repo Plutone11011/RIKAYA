@@ -10,10 +10,9 @@
 #include "cp0.h"
 #include "p1.5test.h" 
 
-#define TERMINATE_PROCESS 3
-
 void programtrap_handler();
 void tlb_handler();
 void SYS_handler();
+void TerminateProcess ();
 
 #endif
