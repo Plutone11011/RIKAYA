@@ -9,7 +9,7 @@ int test3_baton[STEPS + 1] = {0};
 
 char gantt_diagram[GANTT_SIZE] = {0};
 
-/*
+
 static unsigned int get_microseconds()
 {
     return TOD_LO / TIME_SCALE;
@@ -22,7 +22,7 @@ static void delay_ms(unsigned int ms)
     while (get_microseconds() - start <= ms * 1000)
         ;
 }
-*/
+
 /******************************************************************************
  * I/O Routines to write on a terminal
  ******************************************************************************/

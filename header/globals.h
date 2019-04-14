@@ -32,7 +32,7 @@
 #define PROGRAMTRAP_NEWAREA 0x200002BC
 #define SYSCALL_OLDAREA 0x20000348
 #define SYSCALL_NEWAREA 0x200003D4
-#define TIMESLICE 500000U
+#define TIMESLICE 3000U
 
 extern struct list_head ready_queue ;
 extern int ready_processes ;
