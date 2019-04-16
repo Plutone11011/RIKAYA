@@ -4,6 +4,8 @@ pcb_t *pcbfree_h ;
 
 pcb_t pcbFree_table[MAXPROC];
 
+struct list_head *prev, *next ;
+
 void initPcbs(void){
 
     unsigned int i ;
@@ -105,7 +107,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
             //se la priorità corrente è minore di quella di p
             if ((container_of(iterator,pcb_t,p_next))->priority < p->priority){
                 //allora lo si inserisce tra il corrente e il precendente
-                __list_add(&(p->p_next),iterator->prev, iterator);
+                list_add_between(&(p->p_next),iterator->prev, iterator);
                 break ;
             }
             else if ((container_of(iterator,pcb_t,p_next))->priority == p->priority){
@@ -116,7 +118,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
                     continue ;
                 }
                 else {
-                    __list_add(&(p->p_next),iterator, iterator->next);
+                    list_add_between(&(p->p_next),iterator, iterator->next);
                     break ;
                 }
 
@@ -192,7 +194,7 @@ void insertChild(pcb_t *prnt, pcb_t *p){
     //controllo se questo è il primo nodo
     //della lista dei figli
     if (emptyChild(prnt)){
-        __list_add(&(p->p_child),&(prnt->p_child),prnt->p_child.next);
+        list_add_between(&(p->p_child),&(prnt->p_child),prnt->p_child.next);
         
     }
     else {
@@ -222,7 +224,7 @@ pcb_t *removeChild(pcb_t *p){
         //aggiunge fratello successivo a lista dei figli
         //solo se non è l'ultimo
         if (!list_empty(&(firstChild->p_sib))){
-            __list_add(&(container_of(firstChild->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_child),p->p_child.next);
+            list_add_between(&(container_of(firstChild->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_child),p->p_child.next);
         }
         //elimina riferimento ai fratelli
         list_del(&(firstChild->p_sib));
@@ -248,7 +250,7 @@ pcb_t *outChild(pcb_t *p){
             //aggiunge fratello successivo a lista dei figli
             //solo se non è l'ultimo
             if (!list_empty(&(p->p_sib))){
-                __list_add(&(container_of(p->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_parent->p_child),p->p_parent->p_child.next);
+                list_add_between(&(container_of(p->p_sib.next,pcb_t,p_sib)->p_child),&(p->p_parent->p_child),p->p_parent->p_child.next);
             }
             list_del(&(p->p_sib));
             p->p_parent = NULL ;

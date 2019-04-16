@@ -3,7 +3,6 @@
 
 
 void schedule(){
-    //char buf[10];
     pcb_t *pcb_to_run ;
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
@@ -22,18 +21,15 @@ void schedule(){
         }
         running_process = pcb_to_run ;
         running_process->priority = running_process->original_priority ;
-        //itoa(running_process->p_s.pc_epc,buf);
-        //termprint(buf,0);
+
         log_process_order(running_process->original_priority);
         setTIMER(TIMESLICE*TIME_SCALE);
         LDST(&running_process->p_s);
-        //HALT();
     }
     else {
         //se non ci sono processi ready
         //o sono in waiting (non in questa fase)
         //oppure sono terminati
-        termprint("Schedule terminated",0);
         HALT();
     }
 

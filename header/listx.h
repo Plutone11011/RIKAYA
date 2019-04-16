@@ -5,7 +5,10 @@ CPLv2 */
 
 #ifndef NULL
 #define NULL ((void *) 0)
+
 #endif
+
+
 typedef unsigned int    size_tt;
 
 /*
@@ -31,6 +34,7 @@ typedef unsigned int    size_tt;
 		const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 		(type *)( (char *)__mptr - offsetof(type,member) );})
 
+
 /* 
     Macro che restituisce l'offset in byte dall'inizio di una struttura a 
     uno dei suoi campi.
@@ -45,6 +49,7 @@ typedef unsigned int    size_tt;
     return: offset in byte dall'inizio della struttura TYPE al campo MEMBER
 */
 #define offsetof(TYPE, MEMBER) ((size_tt) &((TYPE *)0)->MEMBER)
+
 
 /*
     La struttura list_head e' una semplice coppia di puntatore, per implementare
@@ -101,11 +106,11 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
     prev: elemento che deve precedere new
     next: elemento che deve seguire new
 */
-static inline void __list_add(struct list_head *new, struct list_head *prev, struct list_head *next)
+static inline void list_add_between(struct list_head *new, struct list_head *prev, struct list_head *next)
 {
 	next->prev = new;
-	new->next = next;
 	new->prev = prev;
+    new->next = next;
 	prev->next = new;
 }
 
@@ -119,7 +124,7 @@ static inline void __list_add(struct list_head *new, struct list_head *prev, str
 */
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
-	__list_add(new, head, head->next);
+	list_add_between(new, head, head->next);
 }
 
 /*
@@ -132,7 +137,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 */
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
-	__list_add(new, head->prev, head);
+	list_add_between(new, head->prev, head);
 }
 
 /*
@@ -186,7 +191,7 @@ static inline int list_empty(const struct list_head *head)
 {
 	return head->next == head;
 }
-
+#endif
 /*
     Funzione che restituisce l'elemento successivo a quello passato come
     parametro.
@@ -274,4 +279,4 @@ static inline struct list_head *list_prev(const struct list_head *current)
 	&pos->member != (head);        \
 	pos = container_of(pos->member.prev, typeof(*pos), member))
 
-#endif
+

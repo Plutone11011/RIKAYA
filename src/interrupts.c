@@ -16,7 +16,8 @@ void interrupt_handler(){
     for (i = 0; i < STATE_GPR_LEN ; i++){
 		running_process->p_s.gpr[i] = old_process_state->gpr[i];
 	}
-    running_process->p_s.pc_epc = old_process_state->pc_epc;    
+    running_process->p_s.pc_epc = old_process_state->pc_epc;
+        
     if (cause & CAUSE_IP(1)){
         if (!emptyProcQ(&ready_queue)){
             pcb_t *ready_pcb ;

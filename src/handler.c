@@ -5,8 +5,9 @@
 //quindi non bisogna toccare la coda ready
 void TerminateProcess () {
     
-    running_process = NULL ;
+    
     freePcb(running_process);
+    running_process = NULL ;
 
     schedule();
 }
