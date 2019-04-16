@@ -6,10 +6,10 @@ void init_new_area(unsigned int new_address, unsigned int handler){
     new_state->pc_epc = handler ;
     new_state->gpr[26] = RAMTOP ;
 
-    
-    new_state->status &= ~STATUS_IEc ;//interrupt
-    new_state->status &= ~STATUS_KUc ;//kernel mode
-    new_state->status &= ~STATUS_VMc ;//vm
+    //questi valori sono già così di default
+    //new_state->status &= ~STATUS_IEc ;//interrupt
+    //new_state->status &= ~STATUS_KUc ;//kernel mode
+    //new_state->status &= ~STATUS_VMc ;//vm
     new_state->status |= STATUS_TE ;
 }
 
@@ -28,6 +28,9 @@ void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
     //process->p_s.status &= (~STATUS_KUc) ;
     //process->p_s.status &= (~STATUS_VMc) ; 
     process->p_s.status |= STATUS_TE ;
+    //IEp perché la ROM fa la pop dello stack 
+    //degli interrupt quando processa LDST
+    //quindi il bit previous diventa current
     process->p_s.status |= STATUS_IEp ;
 
     insertProcQ(&ready_queue,process);
