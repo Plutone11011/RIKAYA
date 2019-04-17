@@ -38,8 +38,8 @@ void init_process(unsigned int n, unsigned int addr_process, pcb_t *process){
 }
 
 int main(){
-
-    //char buf[10] ;
+    
+    //inizializza le new area per ogni eccezione
     pcb_t *p1, *p2, *p3 ;
     init_new_area(INTERRUPT_NEWAREA,(unsigned int)interrupt_handler);
     init_new_area(PROGRAMTRAP_NEWAREA,(unsigned int)programtrap_handler);

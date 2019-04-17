@@ -2,7 +2,6 @@
 #include "../header/globals.h"
 
 //terminare progenie solo in fase 2
-//quindi non bisogna toccare la coda ready
 void TerminateProcess () {
     
     

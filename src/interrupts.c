@@ -8,9 +8,13 @@ void interrupt_handler(){
     state_t *old_process_state = (state_t*)INTERRUPT_OLDAREA ;
 
     unsigned int cause = old_process_state->cause ;
-    
+    //copia lo stato dell'area old nel processo running
+    //per poterlo ripristinare in futuro
 	state_copy(&(running_process->p_s),old_process_state);
 
+    //se il processor local timer ha generato l'interrupt
+    //si chiama lo scheduler con le priorità
+    //aggiornate
     if (cause & CAUSE_IP(1)){
         if (!emptyProcQ(&ready_queue)){
             pcb_t *ready_pcb ;
