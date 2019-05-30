@@ -5,7 +5,6 @@
 #include "handler.h"
 #include "scheduler.h"
 
-#define SYS3 3
 #define STEPS 6
 #define GANTT_SIZE 20
 

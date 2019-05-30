@@ -17,6 +17,7 @@
 #define TRANCOMMAND 3
 #define BUSY 3
 
+#define TOD_HI *((unsigned int *)0x10000018)
 #define TOD_LO *((unsigned int *)0x1000001C)
 #define TIME_SCALE *((unsigned int *)0x10000024)
 #define RAMBASE *((unsigned int *)0x10000000)

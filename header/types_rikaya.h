@@ -6,6 +6,9 @@
 
 typedef unsigned int memaddr;
 
+/* variable to contain CPU times */
+typedef unsigned long long cpu_t;
+
 /* Process Control Block (PCB) data structure */
 typedef struct pcb_t {
 	/*process queue fields */
@@ -24,6 +27,12 @@ typedef struct pcb_t {
 	int original_priority ;
 	/* key of the semaphore on which the process is eventually blocked */
 	int			*p_semkey;
+	
+	int tutor;
+
+	/* Process times*/
+	cpu_t user_time, kernel_time, last_scheduled, first_scheduled;
+
 } pcb_t;
 
 
@@ -38,5 +47,6 @@ typedef struct semd_t {
 	/* Queue of PCBs blocked on the semaphore */
 	struct list_head	s_procQ;
 } semd_t;
+
 
 #endif
