@@ -23,7 +23,7 @@ void schedule(){
         running_process->priority = running_process->original_priority ;
 
         log_process_order(running_process->original_priority);
-        setTIMER(TIMESLICE*TIME_SCALE);
+        setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
         LDST(&running_process->p_s);
     }
     else {

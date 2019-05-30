@@ -46,7 +46,7 @@ void interrupt_handler(){
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
     //aggiornate
-    if (cause & CAUSE_IP(IL_CPUTIMER)){
+    if (cause & CAUSE_IP(INT_T_SLICE)){
         if (!emptyProcQ(&ready_queue)){
             pcb_t *ready_pcb ;
             list_for_each_entry(ready_pcb,&ready_queue,p_next){
@@ -54,9 +54,9 @@ void interrupt_handler(){
             }
         }
         schedule();
-    }
+    }/*
     else if (cause & CAUSE_IP(IL_TIMER)){
-        /* Code */
+        //code
     }
     else {
         pcb_t *p;   //  Processo da risvegliare
@@ -137,7 +137,7 @@ void interrupt_handler(){
         }
 
    
-        }
+    }*/
 }
     
 

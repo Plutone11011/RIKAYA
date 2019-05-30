@@ -1,14 +1,82 @@
 #include "../header/handler.h"
-#include "../header/globals.h"
-#include "../header/listx.h"
-#include "../header/interrupts.h"
+
+void SYS_handler () {
+    /*controlla nel registro Cause se l'eccezione sollevata
+    è di tipo breakpoint o syscall, nel caso sia syscall
+    fa un check sul numero, e chiama la funzione corrispondente,
+    poi chiama lo scheduler
+    negli altri casi (breakpoint, sys > 10, user mode)
+    bisogna fare il passup*/
+    state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
+    int retval ;//valore ritornato da certe syscall
+
+    unsigned int cause = old_process_state->cause ;
+    unsigned int A1 = old_process_state->reg_a1;
+    unsigned int A2 = old_process_state->reg_a2;
+    unsigned int A3 = old_process_state->reg_a3;
+
+    //distinzione tra syscall e breakpoint
+    if (CAUSE_EXCCODE_GET(cause) == EXC_BREAKPOINT){
+        //gestione eccezione breakpoint
+        //con passup
+
+    }
+    else if (CAUSE_GET_EXCCODE(cause) == EXC_SYSCALL){
+
+        switch(old_process_state->reg_a0){
+            case GETCPUTIME:
+                Get_CPU_Time(A1, A2, A3);
+                break;
+            case CREATEPROCESS:
+                retval = CreateProcess(A1, A2, A3);
+                if (retval != 0){
+                    PANIC();
+                }
+                break;
+            case TERMINATEPROCESS:
+                TerminateProcess(A1);
+                break ;
+            case VERHOGEN:
+                Verhogen(A1);
+                break;
+            case PASSEREN:
+                Passeren(A1);
+                break;
+            case WAITCLOCK:
+                Wait_Clock();
+                break;
+            case WAITIO:
+                Do_IO(A1,A2);
+                break;
+            case SETTUTOR:  
+                Set_Tutor();
+                break;
+            case SPECPASSUP:
+                Spec_Passup(A1, A2, A3);
+                break;
+            case GETPID:
+                Get_pid_ppid(A1, A2);
+                break;
+            default:
+                break ;
+
+        }
+    }
+    else {
+        //esecuzione in user mode, passup
+        PANIC();
+    }
+    //scheduling, passup
+}
+
+
 
 void whichDevice (int *IntlineNo, int *DevNo, int *termIO, unsigned int *reg) {
 
     //  !devAddrBase = 0x1000.0050 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
     unsigned int devAddrBase = (memaddr)reg - sizeof(unsigned int)
     
-    *IntlineNo = ((devAddrBase - DEV_REG_START) / 0x80) + 3;
+    *IntlineNo = ((devAddrBase - DEV_REGS_START) / 0x80) + 3;
     *DevNo = (devAddrBase - DEV_REG_START + ((IntlineNo - 3) * 0x80)) / 0x10;
 
     //  Se è un Terminale
@@ -150,7 +218,11 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
     int success = -1;
 
     if(new_child != NULL) {
-
+        if (running_process != NULL){
+            //non è quindi il primo processo
+            //di rikaya
+            insertChild(running_process, new_child);    
+        }
         new_child->p_s = *statep;
         new_child->priority = new_child->original_priority = priority;
 
@@ -161,12 +233,13 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
             new_child->created_time += TOD_LO; 
         */
 
-        insertChild(running_process, new_child);
-
         success = 0;
 
         if (cpid != NULL)
             *cpid = &new_child;
+
+        insertProcQ(&ready_queue,new_child);
+        ready_processes++ ;
     }
     
     return success;
@@ -431,57 +504,6 @@ void Get_pid_ppid (void ** pid, void ** ppid) {
 
 }
 
-void SYS_handler () {
-
-    state_t *old_process_state = (state_t*)SYSCALL_OLDAREA ;
-    
-    unsigned int A1 = old_process_state->reg_a1;
-    unsigned int A2 = old_process_state->reg_a2;
-    unsigned int A3 = old_process_state->reg_a3;
-
-    //distinzione tra syscall e breakpoint
-    if (CAUSE_GET_EXCCODE(old_process_state->cause) == EXC_SYS){
-
-        switch(old_process_state->reg_a0){
-            case SYS1:
-                Get_CPU_Time(A1, A2, A3);
-                break;
-            case SYS2:
-                CreateProcess(A1, A2, A3);
-                break;
-            case SYS3:
-                TerminateProcess(A1);
-                break ;
-            case SYS4:
-                Verhogen(A1);
-                break;
-            case SYS5:
-                Passeren(A1);
-                break;
-            case SYS6:
-                Wait_Clock();
-                break;
-            case SYS7:
-                Do_IO(A1,A2);
-                break;
-            case SYS8:  
-                Set_Tutor();
-                break;
-            case SYS9:
-                Spec_Passup(A1, A2, A3);
-                break;
-            case SYS10:
-                Get_pid_ppid(A1, A2);
-                break;
-            default:
-                break ;
-
-        }
-    }
-    else {
-        PANIC();
-    }
-}
 
 void programtrap_handler(){
     termprint("pg trap",0);

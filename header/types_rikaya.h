@@ -48,5 +48,13 @@ typedef struct semd_t {
 	struct list_head	s_procQ;
 } semd_t;
 
+typedef struct semdev {
+	 semd_t disk[DEV_PER_INT];
+	 semd_t tape[DEV_PER_INT];
+	 semd_t network[DEV_PER_INT];
+	 semd_t printer[DEV_PER_INT];
+	 semd_t terminalR[DEV_PER_INT];
+	 semd_t terminalT[DEV_PER_INT];
+} semdev;
 
 #endif
