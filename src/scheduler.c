@@ -22,7 +22,7 @@ void schedule(){
         running_process = pcb_to_run ;
         running_process->priority = running_process->original_priority ;
 
-        log_process_order(running_process->original_priority);
+        //log_process_order(running_process->original_priority);
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
         LDST(&running_process->p_s);
     }

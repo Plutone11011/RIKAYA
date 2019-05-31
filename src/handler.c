@@ -21,41 +21,44 @@ void SYS_handler () {
         //con passup
 
     }
-    else if (CAUSE_GET_EXCCODE(cause) == EXC_SYSCALL){
+    else if (CAUSE_EXCCODE_GET(cause) == EXC_SYSCALL){
 
         switch(old_process_state->reg_a0){
             case GETCPUTIME:
-                Get_CPU_Time(A1, A2, A3);
+                Get_CPU_Time((cpu_t*)A1, (cpu_t*)A2, (cpu_t*)A3);
                 break;
             case CREATEPROCESS:
-                retval = CreateProcess(A1, A2, A3);
-                if (retval != 0){
+                retval = CreateProcess((state_t*)A1, A2,(void **)A3);
+                if (retval == -1){
                     PANIC();
                 }
                 break;
             case TERMINATEPROCESS:
-                TerminateProcess(A1);
+                retval = TerminateProcess((void**)A1);
+                if (retval == -1){
+                    PANIC();
+                }
                 break ;
             case VERHOGEN:
-                Verhogen(A1);
+                Verhogen((int*)A1);
                 break;
             case PASSEREN:
-                Passeren(A1);
+                Passeren((int*)A1);
                 break;
             case WAITCLOCK:
                 Wait_Clock();
                 break;
             case WAITIO:
-                Do_IO(A1,A2);
+                Do_IO(A1,(unsigned int*)A2);
                 break;
             case SETTUTOR:  
                 Set_Tutor();
                 break;
             case SPECPASSUP:
-                Spec_Passup(A1, A2, A3);
+                Spec_Passup(A1, (state_t*)A2, (state_t*)A3);
                 break;
             case GETPID:
-                Get_pid_ppid(A1, A2);
+                Get_pid_ppid((void **)A1, (void **)A2);
                 break;
             default:
                 break ;
@@ -73,19 +76,30 @@ void SYS_handler () {
 
 void whichDevice (int *IntlineNo, int *DevNo, int *termIO, unsigned int *reg) {
 
-    //  !devAddrBase = 0x1000.0050 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-    unsigned int devAddrBase = (memaddr)reg - sizeof(unsigned int)
+    //reg punta al campo command del registro, ovvero la seconda
+    //word del registro
+    unsigned int devAddrBase = (memaddr)reg - WORD_SIZE;
     
-    *IntlineNo = ((devAddrBase - DEV_REGS_START) / 0x80) + 3;
-    *DevNo = (devAddrBase - DEV_REG_START + ((IntlineNo - 3) * 0x80)) / 0x10;
+    //per ottenere l'indirizzo di un registro data la linea di interrupt
+    //e il numero del device DEV_REGS_START+((LINENO-3)*DEV_REGBLOCK_SIZE) + (DEVNO*DEV_REG_SIZE)
+    //per trovare la linea interrupt non serve l'offset del device number
+    *IntlineNo = ((devAddrBase - DEV_REGS_START) / DEV_REGBLOCK_SIZE) + 3;
+
+    *DevNo = (devAddrBase - DEV_REGS_START - ((*IntlineNo - 3) * DEV_REGBLOCK_SIZE)) / DEV_REG_SIZE;
 
     //  Se è un Terminale
     if (*IntlineNo == 7) {
-        //  recv_command
-        if (reg == DEV_REG_START + ((*IntlineNo - 3) * 0x80)) + (DevNo * 0x10) + sizeof(unsigned int) 
-            *termIO = RX;
-        else  //    transm_command
+        // registro dei terminali:
+        //base + 0x0 recv status
+        //base + 0x4 recv command
+        //base + 0x8 transm status
+        //base + 0xc transm command
+        if (reg == (unsigned int*)(DEV_ADDRESS(*IntlineNo,*DevNo) + WORD_SIZE)){
+            *termIO = RX ;
+        } 
+        else {
             *termIO = TX;
+        } //    transm_command
 
     }
 }
@@ -191,7 +205,7 @@ void Get_CPU_Time (cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
         cpu_t currentTOD;
        
         currentTOD = TOD_HI;
-        currentTOD <<= 32;
+        //currentTOD = currentTOD << 32;
         currentTOD += TOD_LO;
 
         *wallclock = currentTOD - running_process->first_scheduled;
@@ -223,7 +237,8 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
             //di rikaya
             insertChild(running_process, new_child);    
         }
-        new_child->p_s = *statep;
+        state_copy(&new_child->p_s,statep);
+        //new_child->p_s = *statep; usare funzione copia strutture
         new_child->priority = new_child->original_priority = priority;
 
         /* 
@@ -260,39 +275,45 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
 int TerminateProcess (void ** pid) {
     
     int success = -1; //    Flag per il successo dell'operazione
-
+    pcb_t **real_pid = (pcb_t**)pid ;
 //  Se non viene specificato un pid:
-    if (pid == 0 || pid == NULL) 
-        *pid = running_process;
+    if (real_pid == 0 || real_pid == NULL) 
+        *real_pid = running_process;
     
-//  Se il processo da terminare è discendente del processo corrente:
-    if (Descendant(*pid, running_process)) {
+//  Se il processo da terminare è discendente del processo corrente
+//o coincidono
+    if (Descendant(*real_pid, running_process) || (*real_pid == running_process)) {
         
         //  Se il processo da terminare ha dei figli:
-        if (!list_empty(*pid->p_child)) {
+        if (!list_empty(&(*real_pid)->p_child)) {
             
             struct list_head* iter;
-            pcb_t *first_child = *pid->p_child;
-            pcb_t *tutor = Tutor(*pid);
+            pcb_t *first_child = container_of((*real_pid)->p_child.next,pcb_t,p_child);
+            pcb_t *tutor = Tutor(*real_pid);
 /*  
     Se non è stato possibile trovare un tutore, i processi orfani 
     verranno adottati dal processo in cima all'albero. 
 */
-            if (tutor == NULL) 
+            if (tutor == NULL){
                 tutor = TreeTop(*pid);
+            }
+            outChild(first_child); 
             insertChild(tutor, first_child);
 /*  
-    Tutti i figli di pid divengono figli di tutor
+    Tutti i fratelli del primogenito di pid 
+    divengono figli di tutor
+    il resto del sottoalbero di pid rimane invariato
 */
-            list_for_each(iter, first_child) {
-                pcb_t *i = container_of(iter, pcb_t, p_sib);
-                insertChild(tutor, i);
+            list_for_each(iter, &(container_of(&(first_child->p_child),pcb_t,p_child)->p_sib)) {
+                outChild(container_of(iter,pcb_t,p_sib));
+                insertChild(tutor, container_of(iter,pcb_t,p_sib));
             }
         }
         
 //  Se il processo è bloccato su un semaforo:
-        if (pid->p_semkey != NULL) 
+        if ((*real_pid)->p_semkey != NULL){
             outBlocked(*pid);
+        }
 
 //  Eliminiamo i legami di parentela di pid
         outChild(*pid);
@@ -407,27 +428,29 @@ void Wait_Clock () {
 int Do_IO (unsigned int command, unsigned int *reg) {
     // ? Il parametro reg è ptr al registro device o al campo comando?
             //campo comando
-    int IntlineNo, DevNo, RX_TX; //    numero linea, device, RX/TX terminale
+    int IntlineNo, DevNo, RX_TX; //    numero linea, device, receiver/transmitter terminale
     int status = -1;//   Stato del device alla fine dell'operazione
-    devreg_t *device;
-
+    termreg_t *term;//può essere terminale o altro device
+    dtpreg_t *dev ;
 //  Info sul device
     whichDevice(&IntlineNo, &DevNo, &RX_TX, reg);
-    device = *((memaddr *)DEV_REG_ADDR(3,DevNo));
+    //device = *((memaddr *)DEV_REG_ADDR(3,DevNo));
 
 //  Scrittura comando nel registro del device 
     *reg = command;
 
     if (IntlineNo < 7) {
-        Passeren(&(normal_devs[IntlineNo-3][DevNo]));
-        status = (int)device->dtp.status;
+        Passeren(&(devs[DevNo][IntlineNo-3]));
+        dev = (dtpreg_t*)DEV_ADDRESS(IntlineNo,DevNo) ;
+        status = dev->status;
     }
     else if (IntlineNo == 7) {
-        Passeren(&(terminals[DevNo][RX_TX]));
+        Passeren(&(terms[DevNo][RX_TX]));
+        term = (termreg_t*)DEV_ADDRESS(IntlineNo,DevNo) ;
         if (RX_TX == 0)
-            status = (int)device->term.recv_status;
+            status = term->recv_status;
         else if (RX_TX == 1)
-            status = (int)device->term.transm_status;
+            status = term->transm_status;
     }
     
     return (status);
@@ -466,25 +489,29 @@ int Spec_Passup (int type, state_t *old, state_t *new) {
     int success = -1;
 
     switch (type) {
-        case SYS_BP: {
-            *old = running_process->p_s;
-            running_process->p_s = *new;
+        case SYS5_SYSBK: {
+            //usare copia strutture
+            state_copy(old,&running_process->p_s);
+            //*old = running_process->p_s;
+            state_copy(&running_process->p_s,new);
+            //running_process->p_s = *new;
             success = 0;
         }
         break;
         
-        case TLB: {
+        case SYS5_TLB: {
 
         }
         break;
 
-        case PGTRP:
+        case SYS5_PGMTRAP:
         
         break;
         
         default:
             break;
     }
+    return success ;
 }
 //#############################################################
 //##################### SYS10 Get_pid_ppid ####################
@@ -506,11 +533,11 @@ void Get_pid_ppid (void ** pid, void ** ppid) {
 
 
 void programtrap_handler(){
-    termprint("pg trap",0);
-    //PANIC();
+    //termprint("pg trap",0);
+    PANIC();
 }
 
 void tlb_handler(){
-    termprint("tlb trap",0);
-    //PANIC();
+    //termprint("tlb trap",0);
+    PANIC();
 }

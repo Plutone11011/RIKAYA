@@ -5,7 +5,7 @@
 #include "types_rikaya.h"
 #include "pcb.h"
 
-extern semd_t semd_table[MAXSEM] ;
+extern semd_t semd_table[NUM_SEMAPHORES] ;
 
 extern semd_t *semdFree_h ; //sentinella lista semafori liberi
 extern semd_t *semd_h ; //sentinella lista semafori attivi

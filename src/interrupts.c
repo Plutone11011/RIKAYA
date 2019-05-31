@@ -1,7 +1,4 @@
 #include "../header/interrupts.h"
-#include "../header/arch.h"
-#include "../header/globals.h"
-#include "../header/handler.h"
 
 /*  
     Int. Line  Device Class
@@ -46,7 +43,7 @@ void interrupt_handler(){
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
     //aggiornate
-    if (cause & CAUSE_IP(INT_T_SLICE)){
+    if (CAUSE_IP_GET(cause,INT_T_SLICE)){
         if (!emptyProcQ(&ready_queue)){
             pcb_t *ready_pcb ;
             list_for_each_entry(ready_pcb,&ready_queue,p_next){

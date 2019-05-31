@@ -140,6 +140,10 @@ typedef int S32;
 /* Installed devices bitmap starting address: same as above */
 /* #define INST_BITMAP_START 0x10000028 */
 
+/* Device register size */
+#define WORD_SIZE 4
+#define DEV_REG_SIZE_W   4
+#define DEV_REG_SIZE     (DEV_REG_SIZE_W * WORD_SIZE)
 /* Address of the first real device register */
 #define DEV_REGS_START 0x10000050
 
@@ -180,6 +184,9 @@ typedef int S32;
 
 /* All interrupts unmasked */
 #define STATUS_INT_UNMASKED 0x0000ff00
+
+#define STATUS_IM(line)      (1U << (8 + (line)))
+#define STATUS_IM_BIT(line)  (8 + (line))
 
 /* Utility definitions for the entryHI register */
 #define ENTRYHI_SEGNO_GET(entryHI) (((entryHI) & 0xc0000000) >> 30)
@@ -311,6 +318,10 @@ typedef int S32;
 #define TRANSTATUS    	2
 #define TRANCOMMAND   	3
 
+/*per i semafori dei terminali*/
+#define RX 0
+#define TX 1
+
 #define STATUSMASK	0xFF
 
 #define	TERM0ADDR	0x10000250
@@ -330,7 +341,7 @@ typedef int S32;
 #define SYSBK_OLDAREA_INDEX 6
 #define SYSBK_NEWAREA_INDEX 7
 
-#define DEV_ADDRESS(LINENO, DEVNO)	DEV_REGS_START+((LINENO-3)*DEV_REG_SIZE) + (DEVNO*DEV_REGBLOCK_SIZE)
+#define DEV_ADDRESS(LINENO, DEVNO)	DEV_REGS_START+((LINENO-3)*DEV_REGBLOCK_SIZE) + (DEVNO*DEV_REG_SIZE)
 
 /* funzione per ottenere il bitmap corrente della linea di interrupt */
 #define INTR_CURRENT_BITMAP(LINENO)	 (U32 *)(PENDING_BITMAP_START + (WORD_SIZE * (LINENO - 3)))

@@ -22,9 +22,7 @@
 
 #include "../header/p2test.h"
 
-typedef unsigned int devregtr;
-typedef unsigned int cpu_t;
-typedef unsigned int pid_t;
+
 
 /* if these are not defined */
 /* typedef U32 cpu_t; */
@@ -107,9 +105,6 @@ memaddr *p5MemLocation = (memaddr*)0x34;		/* To cause a p5 trap */
 pid_t p4pid;
 pid_t testpid;
 pid_t childpid, intermediatepid, p8pid;
-
-void	p2(),p3(),p4(),p5(),p5a(),p5b(),p6(),p7(),p7a(),p5prog(),p5mm();
-void	p5sys(),p8root(),child1(),child2(),p8leaf(),curiousleaf(), intermediate();
 
 /* a procedure to print on terminal 0 */
 void print(char *msg) {

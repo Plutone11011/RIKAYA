@@ -4,6 +4,9 @@ struct list_head ready_queue ;
 int ready_processes ;
 pcb_t *running_process = NULL ;
 
+int devs[DEV_PER_INT][NUM_LINES - 3];
+int terms[DEV_PER_INT][2];
+
 void state_copy(state_t *s1, state_t *s2){
 
     int i = 0 ;

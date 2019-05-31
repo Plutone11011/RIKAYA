@@ -1,6 +1,6 @@
 #include "../header/asl.h"
 
-semd_t semd_table[MAXSEM] ;
+semd_t semd_table[NUM_SEMAPHORES] ;
 
 semd_t *semdFree_h ;
 semd_t *semd_h ;

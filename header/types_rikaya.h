@@ -7,7 +7,7 @@
 typedef unsigned int memaddr;
 
 /* variable to contain CPU times */
-typedef unsigned long long cpu_t;
+typedef unsigned int cpu_t;
 
 /* Process Control Block (PCB) data structure */
 typedef struct pcb_t {
@@ -47,7 +47,7 @@ typedef struct semd_t {
 	/* Queue of PCBs blocked on the semaphore */
 	struct list_head	s_procQ;
 } semd_t;
-
+/*
 typedef struct semdev {
 	 semd_t disk[DEV_PER_INT];
 	 semd_t tape[DEV_PER_INT];
@@ -56,5 +56,5 @@ typedef struct semdev {
 	 semd_t terminalR[DEV_PER_INT];
 	 semd_t terminalT[DEV_PER_INT];
 } semdev;
-
+*/
 #endif

@@ -34,7 +34,7 @@ void init_first_process(){
 
     //cpid è NULL perché viene creato il primo processo
     //non è figlio di nessuno
-    createProcess(&statep,0,NULL);
+    CreateProcess(&statep,0,NULL);
 }
 
 int main(){
@@ -48,9 +48,10 @@ int main(){
 
     initPcbs();
     initASL();
+    //inizializzare variabili kernel
     mkEmptyProcQ(&ready_queue); 
 
-    init_process();
+    init_first_process();
     
     schedule();
     
