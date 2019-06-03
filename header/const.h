@@ -103,6 +103,7 @@ typedef int S32;
    Only those actually used in the code are defined here. If the need arises,
    other commands and states may be defined here. */
 
+#define DEV_C_RESET 0
 #define DEV_C_ACK   1 /* command common to all devices */
 
 #define DEV_DISK_C_SEEKCYL  2        /* disk:       */

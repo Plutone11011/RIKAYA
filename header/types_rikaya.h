@@ -29,7 +29,6 @@ typedef struct pcb_t {
 	int			*p_semkey;
 	
 	int tutor;
-
 	/* Process times*/
 	cpu_t user_time, kernel_time, last_scheduled, first_scheduled;
 

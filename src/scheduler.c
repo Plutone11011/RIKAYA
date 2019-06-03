@@ -1,36 +1,72 @@
 #include "../header/scheduler.h"
 
 
-
-void schedule(){
-    pcb_t *pcb_to_run ;
+//schedula i processi, inserendo quello appena switchato
+//nella coda ready, e settando il timeslice
+//old viene usato per aggiornare lo stato precedente del pcb
+//con quello al momento del context switch 
+void schedule(state_t *old){
+    int status ;
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
     if (ready_processes > 0){
 
-        pcb_to_run = removeProcQ(&ready_queue);
+        //spostato inserimento del running process
+        //nell'interrupt handler, sotto timeslice
+        //perché potrebbe avere priorità maggiore degli altri
+        running_process = removeProcQ(&ready_queue);
 
         ready_processes-- ;
-        
-
-        if (running_process != NULL){
-            //il processo in esecuzione prima del context switch
-            //deve essere rimesso in ready
-            insertProcQ(&ready_queue,running_process);
-            ready_processes++ ;
-        }
-        running_process = pcb_to_run ;
-        running_process->priority = running_process->original_priority ;
 
         //log_process_order(running_process->original_priority);
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
         LDST(&running_process->p_s);
     }
     else {
-        //se non ci sono processi ready
-        //o sono in waiting (non in questa fase)
-        //oppure sono terminati
-        HALT();
+        if (blocked_processes > 0){
+            //lo scheduler non deve prendere nessuna
+            //decisione, non ci sono processi ready,
+            //ma deve aspettare che i processi terminino
+            //le operazioni I/O
+            status = getSTATUS();
+            int i ;
+            status |= STATUS_IEp ;
+            //abilita interrupt device I/O
+            for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
+                status |= STATUS_IM(i) ;
+            }
+            setSTATUS(status);
+            WAIT();
+        }
+        else {
+            HALT();
+        }
     }
 
+}
+
+//inserisce un processo nella coda ready, che sia quello running
+//o uno nuovo. Aggiorna lo stato del pcb e ne ripristina la priorità
+//originale.
+void insertProcqReady(state_t *old, pcb_t *proc){
+
+    if (proc != NULL){
+
+        
+        //può essere chiamato da createprocess,P,V
+        //ma anche dallo scheduler
+        //proc può quindi essere un nuovo processo
+        // o il processo appena switchato
+        if (running_process == proc){
+
+            if (old != NULL){
+                state_copy(&proc->p_s,old);
+            }
+            proc->priority = proc->original_priority ;
+            
+        }//allora è stato invocato dallo scheduler
+
+        insertProcQ(&ready_queue,proc);
+        ready_processes++ ;
+    }
 }

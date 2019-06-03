@@ -16,14 +16,19 @@ void init_new_area(unsigned int new_address, unsigned int handler){
 void init_first_process(){
     
     state_t statep ;
-    
+    int i ;
+
     statep.pc_epc = (memaddr)test ;
     statep.reg_sp = RAMTOP - FRAME_SIZE ;
 
     
     //isola l'interrupt mask e accende il bit dell'interval timer
     
-    statep.status |= STATUS_IM(1) ;
+    statep.status = STATUS_IM(INT_T_SLICE) ;
+    //abilita interrupt dei device I/O
+    for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
+        statep.status |= STATUS_IM(i) ;
+    }
     //process->p_s.status &= (~STATUS_KUc) ;
     //process->p_s.status &= (~STATUS_VMc) ; 
     statep.status |= STATUS_TE ;
@@ -49,11 +54,11 @@ int main(){
     initPcbs();
     initASL();
     //inizializzare variabili kernel
-    mkEmptyProcQ(&ready_queue); 
+    init_Kernel_Vars();
 
     init_first_process();
     
-    schedule();
+    schedule(NULL);
     
     return 0 ;
 }

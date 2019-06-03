@@ -36,10 +36,6 @@ void interrupt_handler(){
     state_t *old_process_state = (state_t*)INTERRUPT_OLDAREA ;
     unsigned int cause = old_process_state->cause ;
 
-    //copia lo stato dell'area old nel processo running
-    //per poterlo ripristinare in futuro
-	state_copy(&(running_process->p_s),old_process_state);
-
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
     //aggiornate
@@ -50,91 +46,104 @@ void interrupt_handler(){
                 ready_pcb->priority++ ;
             }
         }
-        schedule();
-    }/*
-    else if (cause & CAUSE_IP(IL_TIMER)){
-        //code
+        if (running_process != NULL){
+            insertProcqReady((old_process_state),running_process);
+        }
+        schedule(old_process_state);
     }
     else {
         pcb_t *p;   //  Processo da risvegliare
-        int *key;   // Ptr a valore semaforo
-        devreg_t *dev_reg;  //  Registro device
+        devreg_t dev_reg;  //  Registro device
+        
         int bitmap, IntlineNo, DevNo;   // Bitmap Interrupt, numero linea e device
         
-        for (IntlineNo = 3; IntlineNo < N_INTERRUPT_LINES; IntlineNo++) {
-            if (cause & CAUSE_IP(IntlineNo))
+        for (IntlineNo = INT_LOWEST; IntlineNo < INT_LOWEST + DEV_USED_INTS; IntlineNo++) {
+            if (CAUSE_IP_GET(cause,IntlineNo))
                 break;
         }
-
-        bitmap = *((memaddr*)CDEV_BITMAP_ADDR(IntlineNo));  
+        //bitmap del device che ha causato interrupt
+        bitmap = *((memaddr*)INTR_CURRENT_BITMAP(IntlineNo));  
 
     //  Cerchiamo il primo bit a 1 per identificare il numero di device
         for (DevNo = 0; DevNo < DEV_PER_INT; DevNo++)
             if (bitmap  & (1U << DevNo)) 
                 break;
-        
-        dev_reg = *((memaddr *)DEV_REG_ADDR(3,DevNo));
+        //da correggere
+        //dev_reg = *((memaddr *)DEV_REG_ADDR(3,DevNo));
         
         switch (IntlineNo) {
-            case IL_DISK:
-            case IL_TAPE:
-            case IL_ETHERNET:
-            case IL_PRINTER: {
-                *key = (normal_devs[IntlineNo-3][DevNo]);
-            //  Primo processo in attesa sul semaforo
-                if ((p = headBlocked(key)) == NULL)
-                    PANIC();
-
-            //  Copiamo lo stato del device nel registro A1
-                p->p_s.reg_a1 = dev_reg->dtp.status;
-
-            //  Incrementiamo il valore del semaforo
-                Verhogen(key);
-                
-            //  Invio acknowledgement interrupt        
-                dev_reg->dtp.command = ACK;
-            } 
-            break;
-
-            case IL_TERMINAL: {
+            case INT_TERMINAL: 
+                dev_reg.term = *((termreg_t *)DEV_ADDRESS(IntlineNo,DevNo));
                 int TX_RX = -1;
 
                 //  Transm o recv?
-                if ((dev_reg->term.recv_status & 0xFF) == CHAR_RCVD) 
+                if ((dev_reg.term.recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
                     TX_RX = RX;
-                else if((dev_reg->term.transm_status & 0xFF) == CHAR_TRSD)
+                else if((dev_reg.term.transm_status & 0xFF) == DEV_TTRS_S_CHARTRSM)
                     TX_RX = TX;
                 else 
                     PANIC();
 
-                *key = (terminals[DevNo][TX_RX]);
                 
-                if ((p = headBlocked(key)) == NULL)
+                if ((p = headBlocked(&terms[DevNo][TX_RX])) == NULL)
                     PANIC();
 
                 //  V
-                Verhogen(key);
+                Verhogen(&terms[DevNo][TX_RX]);
 
                 //  ACK
                 if (TX_RX == RX) {
-                    p->p_s.reg_a1 = dev_reg->term.recv_status;
-                    dev_reg->term.recv_command = ACK;
+                    p->p_s.reg_a1 = dev_reg.term.recv_status;
+                    dev_reg.term.recv_command = DEV_C_ACK;
                     }
                 else if (TX_RX == TX){
-                    p->p_s.reg_a1 = dev_reg->term.transm_status;    
-                    dev_reg->term.transm_command = ACK;
+                    p->p_s.reg_a1 = dev_reg.term.transm_status;    
+                    dev_reg.term.transm_command = DEV_C_ACK;
                 }
-                else PANIC();
-            } 
-            break;
+                else{
+                    PANIC();
+                }
+                break;
+            case INT_DISK:
+                break;
+            case INT_TAPE:
+                break;
+            case INT_UNUSED:
+                break; 
+            case INT_PRINTER: 
+                
+                dev_reg.dtp = *((dtpreg_t *)DEV_ADDRESS(IntlineNo,DevNo));
+                //Primo processo in attesa sul semaforo
+                if ((p = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
+                    PANIC();
+
+                //Copiamo lo stato del device nel registro A1
+                p->p_s.reg_a1 = dev_reg.dtp.status;
+
+                //Incrementiamo il valore del semaforo
+                Verhogen(&devs[DevNo][IntlineNo-3]);
+                
+                //Invio acknowledgement interrupt        
+                dev_reg.dtp.command = DEV_C_ACK;
+            
+                break;
+            
             
             default:
                 PANIC();
-            
         }
 
+        blocked_processes-- ;
+        if(running_process != NULL){
+            //eventuali calcoli sui tempi
+            LDST(old_process_state);
+        }
+        else {
+            schedule(NULL);
+        } 
+
    
-    }*/
+    }
 }
     
 

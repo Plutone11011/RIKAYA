@@ -9,7 +9,8 @@ void SYS_handler () {
     bisogna fare il passup*/
     state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
     int retval ;//valore ritornato da certe syscall
-
+    
+    int scheduler = 1 ;
     unsigned int cause = old_process_state->cause ;
     unsigned int A1 = old_process_state->reg_a1;
     unsigned int A2 = old_process_state->reg_a2;
@@ -23,85 +24,92 @@ void SYS_handler () {
     }
     else if (CAUSE_EXCCODE_GET(cause) == EXC_SYSCALL){
 
-        switch(old_process_state->reg_a0){
-            case GETCPUTIME:
-                Get_CPU_Time((cpu_t*)A1, (cpu_t*)A2, (cpu_t*)A3);
-                break;
-            case CREATEPROCESS:
-                retval = CreateProcess((state_t*)A1, A2,(void **)A3);
-                if (retval == -1){
-                    PANIC();
-                }
-                break;
-            case TERMINATEPROCESS:
-                retval = TerminateProcess((void**)A1);
-                if (retval == -1){
-                    PANIC();
-                }
-                break ;
-            case VERHOGEN:
-                Verhogen((int*)A1);
-                break;
-            case PASSEREN:
-                Passeren((int*)A1);
-                break;
-            case WAITCLOCK:
-                Wait_Clock();
-                break;
-            case WAITIO:
-                Do_IO(A1,(unsigned int*)A2);
-                break;
-            case SETTUTOR:  
-                Set_Tutor();
-                break;
-            case SPECPASSUP:
-                Spec_Passup(A1, (state_t*)A2, (state_t*)A3);
-                break;
-            case GETPID:
-                Get_pid_ppid((void **)A1, (void **)A2);
-                break;
-            default:
-                break ;
+ 
+        //eseguita in kernel mode?
+        if (!(old_process_state->status & STATUS_KUc)){
 
+            switch(old_process_state->reg_a0){
+                case GETCPUTIME:
+                    Get_CPU_Time((cpu_t*)A1, (cpu_t*)A2, (cpu_t*)A3);
+                    break;
+                case CREATEPROCESS:
+                    retval = CreateProcess((state_t*)A1, A2,(void **)A3);
+                    if (retval == -1){
+                        PANIC();
+                    }
+                    break;
+                case TERMINATEPROCESS:
+                    retval = TerminateProcess((void**)A1);
+                    if (retval == -1){
+                        PANIC();
+                    }
+                    break ;
+                case VERHOGEN:
+                    Verhogen((int*)A1);
+                    break;
+                case PASSEREN:
+                    Passeren((int*)A1);
+                    break;
+                case WAITCLOCK:
+                    Wait_Clock();
+                    break;
+                case WAITIO:
+                    Do_IO(A1,(unsigned int*)A2);
+                    break;
+                case SETTUTOR:  
+                    Set_Tutor();
+                    break;
+                case SPECPASSUP:
+                    Spec_Passup(A1, (state_t*)A2, (state_t*)A3);
+                    break;
+                case GETPID:
+                    Get_pid_ppid((void **)A1, (void **)A2);
+                    break;
+                default:
+                    break ;
+
+            }
+
+        }
+        else {
+            scheduler = 0 ;
+            //eseguita in user mode
+        }
+    }
+
+    if (scheduler){
+        //schedule();
+        if (running_process != NULL){
+            //rieseguo il processo che ha richiesto
+            //la system call al kernel
+            old_process_state->pc_epc += 4 ;
+            LDST(old_process_state);
+        }
+        else {
+            //se il running process è NULL
+            //non bisogna aggiornargli lo stato corrente
+            schedule(NULL);
         }
     }
     else {
-        //esecuzione in user mode, passup
-        PANIC();
+        //passup
     }
-    //scheduling, passup
 }
 
 
 
-void whichDevice (int *IntlineNo, int *DevNo, int *termIO, unsigned int *reg) {
+static void whichDevice (int *IntlineNo, int *DevNo, unsigned int *reg) {
 
-    //reg punta al campo command del registro, ovvero la seconda
-    //word del registro
-    unsigned int devAddrBase = (memaddr)reg - WORD_SIZE;
+    
     
     //per ottenere l'indirizzo di un registro data la linea di interrupt
     //e il numero del device DEV_REGS_START+((LINENO-3)*DEV_REGBLOCK_SIZE) + (DEVNO*DEV_REG_SIZE)
     //per trovare la linea interrupt non serve l'offset del device number
-    *IntlineNo = ((devAddrBase - DEV_REGS_START) / DEV_REGBLOCK_SIZE) + 3;
+    *IntlineNo = (((unsigned int)reg - DEV_REGS_START) / DEV_REGBLOCK_SIZE) + 3;
 
-    *DevNo = (devAddrBase - DEV_REGS_START - ((*IntlineNo - 3) * DEV_REGBLOCK_SIZE)) / DEV_REG_SIZE;
+    *DevNo = ((unsigned int)reg - DEV_REGS_START - ((*IntlineNo - 3) * DEV_REGBLOCK_SIZE)) / DEV_REG_SIZE;
 
-    //  Se è un Terminale
-    if (*IntlineNo == 7) {
-        // registro dei terminali:
-        //base + 0x0 recv status
-        //base + 0x4 recv command
-        //base + 0x8 transm status
-        //base + 0xc transm command
-        if (reg == (unsigned int*)(DEV_ADDRESS(*IntlineNo,*DevNo) + WORD_SIZE)){
-            *termIO = RX ;
-        } 
-        else {
-            *termIO = TX;
-        } //    transm_command
-
-    }
+    
 }
 
 /* 
@@ -109,7 +117,7 @@ void whichDevice (int *IntlineNo, int *DevNo, int *termIO, unsigned int *reg) {
     o meno discendente di ancestor.
 */
 
-int Descendant (pcb_t *p, pcb_t *ancestor) {
+static int Descendant (pcb_t *p, pcb_t *ancestor) {
     
     pcb_t *tmp;
     int found = FALSE;
@@ -130,7 +138,7 @@ int Descendant (pcb_t *p, pcb_t *ancestor) {
     -p è il processo dal cui genitore si inizia la ricerca del tutor.
 */
 
-pcb_t* Tutor (pcb_t *p) {
+static pcb_t* Tutor (pcb_t *p) {
 
     pcb_t *tmp;
     int found = FALSE;
@@ -150,7 +158,7 @@ pcb_t* Tutor (pcb_t *p) {
     Funzione ausiliaria per il top dell'albero.
 */
 
-pcb_t* TreeTop (pcb_t *p) {
+static pcb_t* TreeTop (pcb_t *p) {
 
     pcb_t *tmp;
 
@@ -253,8 +261,7 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
         if (cpid != NULL)
             *cpid = &new_child;
 
-        insertProcQ(&ready_queue,new_child);
-        ready_processes++ ;
+        insertProcqReady(NULL,new_child);
     }
     
     return success;
@@ -313,6 +320,7 @@ int TerminateProcess (void ** pid) {
 //  Se il processo è bloccato su un semaforo:
         if ((*real_pid)->p_semkey != NULL){
             outBlocked(*pid);
+            blocked_processes-- ;
         }
 
 //  Eliminiamo i legami di parentela di pid
@@ -325,8 +333,6 @@ int TerminateProcess (void ** pid) {
 
         success = 0;
     }
-
-    schedule();
 
     return success;
 }
@@ -342,8 +348,9 @@ int TerminateProcess (void ** pid) {
 */
 void Verhogen (int *semaddr){
     
+    pcb_t *p ;
 //  Si incrementa il valore del semaforo.
-    (*semaddr++);
+    (*semaddr)++;
 
 /* 
     Se il valore del semaforo non è positivo,
@@ -353,9 +360,11 @@ void Verhogen (int *semaddr){
    if(*semaddr <= 0) {
        
 //   Rimuoviamo p dalla coda:
-       pcb_t *p = removeBlocked(semaddr);
+       p = removeBlocked(semaddr);
        
-       if (p != NULL) insertProcQ(&ready_queue, p); 
+       if (p != NULL){
+           insertProcqReady(NULL,p);
+       }  
    }
     
 }
@@ -370,20 +379,27 @@ void Verhogen (int *semaddr){
 */
 
 void Passeren (int *semaddr) {
-    
-    (*semaddr--);
-
+    pcb_t *suspended_pcb ;
+    state_t *old ;
+    (*semaddr)--;
 /* 
     Se il valore diventa negativo:
     inseriamo il processo corrente nella
     coda del semaforo.
 */
     if (*semaddr < 0) {
-/* 
-    TODO: va interrotto (pausato) il processo corrente 
-    salvando lo stato attuale del processore 
-*/
-        insertBlocked(semaddr, running_process);
+
+        //il processo sospeso sul semaforo ripristina la
+        //priorità originale e salva il suo stato
+        //prima dell'eccezione
+        suspended_pcb = running_process ;
+        running_process->priority = running_process->original_priority ;
+        running_process = NULL ;
+
+        old = (state_t*)SYSBK_OLDAREA ;
+        state_copy(&suspended_pcb->p_s,old);
+
+        insertBlocked(semaddr, suspended_pcb);
     }
 }
 //#############################################################
@@ -426,34 +442,47 @@ void Wait_Clock () {
         di esse abbia effettivamente lanciato l’eccezione.
 */
 int Do_IO (unsigned int command, unsigned int *reg) {
-    // ? Il parametro reg è ptr al registro device o al campo comando?
-            //campo comando
-    int IntlineNo, DevNo, RX_TX; //    numero linea, device, receiver/transmitter terminale
-    int status = -1;//   Stato del device alla fine dell'operazione
-    termreg_t *term;//può essere terminale o altro device
-    dtpreg_t *dev ;
-//  Info sul device
-    whichDevice(&IntlineNo, &DevNo, &RX_TX, reg);
-    //device = *((memaddr *)DEV_REG_ADDR(3,DevNo));
 
-//  Scrittura comando nel registro del device 
-    *reg = command;
+    int IntlineNo, DevNo; //numero linea, device
+    int status = -1;//   Stato del device alla fine dell'operazione
+    
+    devreg_t dev ;//terminale o altro device
+//  Info sul device
+    whichDevice(&IntlineNo, &DevNo, reg);
+    
+    blocked_processes++ ;
+
+    
 
     if (IntlineNo < 7) {
+        dev.dtp = *((dtpreg_t *)reg);
+        dev.dtp.command = command ;
         Passeren(&(devs[DevNo][IntlineNo-3]));
-        dev = (dtpreg_t*)DEV_ADDRESS(IntlineNo,DevNo) ;
-        status = dev->status;
+        status = dev.dtp.status;
     }
     else if (IntlineNo == 7) {
-        Passeren(&(terms[DevNo][RX_TX]));
-        term = (termreg_t*)DEV_ADDRESS(IntlineNo,DevNo) ;
-        if (RX_TX == 0)
-            status = term->recv_status;
-        else if (RX_TX == 1)
-            status = term->transm_status;
+        dev.term = *((termreg_t*)reg);
+        if (command == DEV_C_ACK || command == DEV_C_RESET){
+            //decidere in quale subdevice scrivere comando
+        }
+        else if (command > 255){
+            //allora è un comando
+            //per il transmitter
+            //perché il carattere da trasmettere
+            //viene scritto nel secondo byte
+            dev.term.transm_command = command ;
+            Passeren(&(terms[DevNo][TX]));
+            status = dev.term.transm_status ;    
+        }
+        else {
+            //comando receive
+            dev.term.recv_command = command ;
+            Passeren(&(terms[DevNo][RX]));
+            status = dev.term.recv_status ;
+        }
     }
     
-    return (status);
+    return status;
    
 }
 //#############################################################

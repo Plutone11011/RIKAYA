@@ -9,6 +9,7 @@
 #include "utils.h"
 
 
-void schedule();
+void schedule(state_t *old);
+void insertProcqReady(state_t *old, pcb_t *proc);
 
 #endif
