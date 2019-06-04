@@ -30,11 +30,15 @@ void schedule(state_t *old){
             //le operazioni I/O
             status = getSTATUS();
             int i ;
-            status |= STATUS_IEp ;
+            status |= STATUS_IEc ;
             //abilita interrupt device I/O
             for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
                 status |= STATUS_IM(i) ;
             }
+            //forse necessario disabilitare timer
+            //visto che ha priorità maggiore degli 
+            //interrupt dei device I/O
+            status &= (~STATUS_TE);
             setSTATUS(status);
             WAIT();
         }

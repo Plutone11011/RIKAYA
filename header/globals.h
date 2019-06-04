@@ -16,6 +16,7 @@ extern int blocked_processes ;
 extern int debug ;
 extern int linenumber ;
 extern int devnumber ;
+extern struct list_head *sem_head ;
 
 void state_copy(state_t *s1, state_t *s2);
 

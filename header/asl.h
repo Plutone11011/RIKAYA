@@ -2,6 +2,7 @@
 #define ASL_H
 
 #include "const.h"
+#include "globals.h"
 #include "types_rikaya.h"
 #include "pcb.h"
 

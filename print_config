@@ -1,6 +1,6 @@
 {
     "boot": {
-        "core-file": "/home/osboxes/Scrivania/RIKAYA/kernel.core.umps",
+        "core-file": "/home/osboxes/Scrivania/OS_RIKAYA/RIKAYA/kernel.core.umps",
         "load-core-file": true
     },
     "bootstrap-rom": "/usr/local/share/umps2/coreboot.rom.umps",
@@ -16,7 +16,7 @@
     "num-ram-frames": 64,
     "symbol-table": {
         "asid": 64,
-        "file": "/home/osboxes/Scrivania/RIKAYA/kernel.stab.umps"
+        "file": "/home/osboxes/Scrivania/OS_RIKAYA/RIKAYA/kernel.stab.umps"
     },
     "tlb-size": 16
 }

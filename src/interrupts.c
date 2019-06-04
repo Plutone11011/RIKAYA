@@ -53,7 +53,8 @@ void interrupt_handler(){
     }
     else {
         pcb_t *p;   //  Processo da risvegliare
-        devreg_t dev_reg;  //  Registro device
+        dtpreg_t *dev;  //  Registro device
+        termreg_t *term ;
         
         int bitmap, IntlineNo, DevNo;   // Bitmap Interrupt, numero linea e device
         
@@ -68,18 +69,16 @@ void interrupt_handler(){
         for (DevNo = 0; DevNo < DEV_PER_INT; DevNo++)
             if (bitmap  & (1U << DevNo)) 
                 break;
-        //da correggere
-        //dev_reg = *((memaddr *)DEV_REG_ADDR(3,DevNo));
         
         switch (IntlineNo) {
             case INT_TERMINAL: 
-                dev_reg.term = *((termreg_t *)DEV_ADDRESS(IntlineNo,DevNo));
+                term = (termreg_t *)DEV_ADDRESS(IntlineNo,DevNo);
                 int TX_RX = -1;
 
                 //  Transm o recv?
-                if ((dev_reg.term.recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
+                if ((term->recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
                     TX_RX = RX;
-                else if((dev_reg.term.transm_status & 0xFF) == DEV_TTRS_S_CHARTRSM)
+                else if((term->transm_status & 0xFF) == DEV_TTRS_S_CHARTRSM)
                     TX_RX = TX;
                 else 
                     PANIC();
@@ -93,12 +92,13 @@ void interrupt_handler(){
 
                 //  ACK
                 if (TX_RX == RX) {
-                    p->p_s.reg_a1 = dev_reg.term.recv_status;
-                    dev_reg.term.recv_command = DEV_C_ACK;
+                    //a cosa serve questo?
+                    p->p_s.reg_a1 = term->recv_status;
+                    term->recv_command = DEV_C_ACK;
                     }
                 else if (TX_RX == TX){
-                    p->p_s.reg_a1 = dev_reg.term.transm_status;    
-                    dev_reg.term.transm_command = DEV_C_ACK;
+                    p->p_s.reg_a1 = term->transm_status;    
+                    term->transm_command = DEV_C_ACK;
                 }
                 else{
                     PANIC();
@@ -112,19 +112,19 @@ void interrupt_handler(){
                 break; 
             case INT_PRINTER: 
                 
-                dev_reg.dtp = *((dtpreg_t *)DEV_ADDRESS(IntlineNo,DevNo));
+                dev = (dtpreg_t *)DEV_ADDRESS(IntlineNo,DevNo);
                 //Primo processo in attesa sul semaforo
                 if ((p = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
                     PANIC();
 
                 //Copiamo lo stato del device nel registro A1
-                p->p_s.reg_a1 = dev_reg.dtp.status;
+                p->p_s.reg_a1 = dev->status;
 
                 //Incrementiamo il valore del semaforo
                 Verhogen(&devs[DevNo][IntlineNo-3]);
                 
                 //Invio acknowledgement interrupt        
-                dev_reg.dtp.command = DEV_C_ACK;
+                dev->command = DEV_C_ACK;
             
                 break;
             

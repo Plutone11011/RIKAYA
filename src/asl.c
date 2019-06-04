@@ -49,7 +49,6 @@ static semd_t* allocSemaphore(){
     if (semdFree_h != NULL){
         /*elimino elemento in coda*/
         semd_t *lastSem = container_of(semdFree_h->s_next.prev,semd_t,s_next) ;
-
         
         if (list_empty(&(semdFree_h->s_next))){
             semdFree_h = NULL ;

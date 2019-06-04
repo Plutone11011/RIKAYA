@@ -49,12 +49,12 @@ void SYS_handler () {
                     break;
                 case PASSEREN:
                     Passeren((int*)A1);
-                    break;
                 case WAITCLOCK:
+                       break;
                     Wait_Clock();
                     break;
                 case WAITIO:
-                    Do_IO(A1,(unsigned int*)A2);
+                    debug = Do_IO(A1,(unsigned int*)A2);
                     break;
                 case SETTUTOR:  
                     Set_Tutor();
@@ -77,6 +77,8 @@ void SYS_handler () {
         }
     }
 
+    //forse questa parte può essere messa direttamente 
+    //nel if-else sopra 
     if (scheduler){
         //schedule();
         if (running_process != NULL){
@@ -446,7 +448,8 @@ int Do_IO (unsigned int command, unsigned int *reg) {
     int IntlineNo, DevNo; //numero linea, device
     int status = -1;//   Stato del device alla fine dell'operazione
     
-    devreg_t dev ;//terminale o altro device
+    dtpreg_t *dev ;//device non terminale
+    termreg_t *term ;
 //  Info sul device
     whichDevice(&IntlineNo, &DevNo, reg);
     
@@ -455,13 +458,13 @@ int Do_IO (unsigned int command, unsigned int *reg) {
     
 
     if (IntlineNo < 7) {
-        dev.dtp = *((dtpreg_t *)reg);
-        dev.dtp.command = command ;
+        dev = (dtpreg_t *)reg ;
+        dev->command = command ;
         Passeren(&(devs[DevNo][IntlineNo-3]));
-        status = dev.dtp.status;
+        status = dev->status;
     }
     else if (IntlineNo == 7) {
-        dev.term = *((termreg_t*)reg);
+        term = (termreg_t*)reg ;
         if (command == DEV_C_ACK || command == DEV_C_RESET){
             //decidere in quale subdevice scrivere comando
         }
@@ -470,15 +473,15 @@ int Do_IO (unsigned int command, unsigned int *reg) {
             //per il transmitter
             //perché il carattere da trasmettere
             //viene scritto nel secondo byte
-            dev.term.transm_command = command ;
+            term->transm_command = command ;
             Passeren(&(terms[DevNo][TX]));
-            status = dev.term.transm_status ;    
+            status = term->transm_status ;    
         }
         else {
             //comando receive
-            dev.term.recv_command = command ;
+            term->recv_command = command ;
             Passeren(&(terms[DevNo][RX]));
-            status = dev.term.recv_status ;
+            status = term->recv_status ;
         }
     }
     

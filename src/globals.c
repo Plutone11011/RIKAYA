@@ -19,6 +19,7 @@ int blocked_processes ;
 int devnumber = -1 ;
 int linenumber = -1 ;
 int debug = -1;
+struct list_head *sem_head = NULL ;
 
 void state_copy(state_t *s1, state_t *s2){
 
