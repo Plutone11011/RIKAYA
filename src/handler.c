@@ -10,6 +10,7 @@ void SYS_handler () {
     state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
     int retval ;//valore ritornato da certe syscall
     
+
     int scheduler = 1 ;
     unsigned int cause = old_process_state->cause ;
     unsigned int A1 = old_process_state->reg_a1;
@@ -54,7 +55,7 @@ void SYS_handler () {
                     Wait_Clock();
                     break;
                 case WAITIO:
-                    debug = Do_IO(A1,(unsigned int*)A2);
+                    retval = Do_IO(A1,(unsigned int*)A2);
                     break;
                 case SETTUTOR:  
                     Set_Tutor();
@@ -394,12 +395,16 @@ void Passeren (int *semaddr) {
         //il processo sospeso sul semaforo ripristina la
         //priorità originale e salva il suo stato
         //prima dell'eccezione
-        suspended_pcb = running_process ;
-        running_process->priority = running_process->original_priority ;
-        running_process = NULL ;
+        if (running_process != NULL){
+            suspended_pcb = running_process ;
+            running_process->priority = running_process->original_priority ;
+            running_process = NULL ;
 
-        old = (state_t*)SYSBK_OLDAREA ;
-        state_copy(&suspended_pcb->p_s,old);
+            old = (state_t*)SYSBK_OLDAREA ;
+            old->pc_epc += 4 ;
+            state_copy(&suspended_pcb->p_s,old);
+        }
+        
 
         insertBlocked(semaddr, suspended_pcb);
     }

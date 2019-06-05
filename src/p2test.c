@@ -124,7 +124,7 @@ void print(char *msg) {
 		status = SYSCALL(WAITIO, command, (unsigned int)base, FALSE);
 
 		/*		PANIC(); */
-
+		setDebug(status);
 		if ((status & TERMSTATMASK) != TRANSM)
 			PANIC();
 

@@ -7,6 +7,7 @@
 //con quello al momento del context switch 
 void schedule(state_t *old){
     int status ;
+    pcb_t *pcb_to_run ;
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
     if (ready_processes > 0){
@@ -14,10 +15,13 @@ void schedule(state_t *old){
         //spostato inserimento del running process
         //nell'interrupt handler, sotto timeslice
         //perché potrebbe avere priorità maggiore degli altri
-        running_process = removeProcQ(&ready_queue);
+        pcb_to_run = removeProcQ(&ready_queue);
 
         ready_processes-- ;
-
+        if (running_process != NULL){
+            insertProcqReady(old,running_process);
+        }
+        running_process = pcb_to_run ;
         //log_process_order(running_process->original_priority);
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
         LDST(&running_process->p_s);

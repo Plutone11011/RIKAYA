@@ -17,6 +17,7 @@ extern int debug ;
 extern int linenumber ;
 extern int devnumber ;
 extern struct list_head *sem_head ;
+void setDebug(int d);
 
 void state_copy(state_t *s1, state_t *s2);
 

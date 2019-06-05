@@ -36,6 +36,7 @@ void interrupt_handler(){
     state_t *old_process_state = (state_t*)INTERRUPT_OLDAREA ;
     unsigned int cause = old_process_state->cause ;
 
+    
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
     //aggiornate
@@ -46,9 +47,6 @@ void interrupt_handler(){
                 ready_pcb->priority++ ;
             }
         }
-        if (running_process != NULL){
-            insertProcqReady((old_process_state),running_process);
-        }
         schedule(old_process_state);
     }
     else {
@@ -58,92 +56,84 @@ void interrupt_handler(){
         
         int bitmap, IntlineNo, DevNo;   // Bitmap Interrupt, numero linea e device
         
+        
         for (IntlineNo = INT_LOWEST; IntlineNo < INT_LOWEST + DEV_USED_INTS; IntlineNo++) {
             if (CAUSE_IP_GET(cause,IntlineNo))
                 break;
         }
+        if (IntlineNo == INT_LOWEST + DEV_USED_INTS){
+            //nessuna delle linee ha un interrupt pending
+            PANIC();
+        }
         //bitmap del device che ha causato interrupt
         bitmap = *((memaddr*)INTR_CURRENT_BITMAP(IntlineNo));  
-
+        
     //  Cerchiamo il primo bit a 1 per identificare il numero di device
         for (DevNo = 0; DevNo < DEV_PER_INT; DevNo++)
             if (bitmap  & (1U << DevNo)) 
                 break;
         
-        switch (IntlineNo) {
-            case INT_TERMINAL: 
-                term = (termreg_t *)DEV_ADDRESS(IntlineNo,DevNo);
-                int TX_RX = -1;
-
-                //  Transm o recv?
-                if ((term->recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
-                    TX_RX = RX;
-                else if((term->transm_status & 0xFF) == DEV_TTRS_S_CHARTRSM)
-                    TX_RX = TX;
-                else 
-                    PANIC();
-
-                
-                if ((p = headBlocked(&terms[DevNo][TX_RX])) == NULL)
-                    PANIC();
-
-                //  V
-                Verhogen(&terms[DevNo][TX_RX]);
-
-                //  ACK
-                if (TX_RX == RX) {
-                    //a cosa serve questo?
-                    p->p_s.reg_a1 = term->recv_status;
-                    term->recv_command = DEV_C_ACK;
-                    }
-                else if (TX_RX == TX){
-                    p->p_s.reg_a1 = term->transm_status;    
-                    term->transm_command = DEV_C_ACK;
-                }
-                else{
-                    PANIC();
-                }
-                break;
-            case INT_DISK:
-                break;
-            case INT_TAPE:
-                break;
-            case INT_UNUSED:
-                break; 
-            case INT_PRINTER: 
-                
-                dev = (dtpreg_t *)DEV_ADDRESS(IntlineNo,DevNo);
-                //Primo processo in attesa sul semaforo
-                if ((p = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
-                    PANIC();
-
-                //Copiamo lo stato del device nel registro A1
-                p->p_s.reg_a1 = dev->status;
-
-                //Incrementiamo il valore del semaforo
-                Verhogen(&devs[DevNo][IntlineNo-3]);
-                
-                //Invio acknowledgement interrupt        
-                dev->command = DEV_C_ACK;
+        
+        //IntlineNo non può avere un valore
+        //diverso da 3-7, nel caso andrebbe in PANIC prima
+        if (IntlineNo == INT_TERMINAL) { 
+            term = (termreg_t *)(DEV_ADDRESS(IntlineNo,DevNo));
+            int TX_RX = -1;
+            //  Transm o recv?
             
-                break;
-            
-            
-            default:
+            if ((term->recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
+                TX_RX = RX;
+            else if((term->transm_status & 0xFF) == DEV_TTRS_S_CHARTRSM)
+                TX_RX = TX;
+            else 
                 PANIC();
-        }
+            
+            if ((p = headBlocked(&terms[DevNo][TX_RX])) == NULL)
+                PANIC();
 
-        blocked_processes-- ;
-        if(running_process != NULL){
-            //eventuali calcoli sui tempi
-            LDST(old_process_state);
+            //  V
+            Verhogen(&terms[DevNo][TX_RX]);
+
+            //  ACK
+            if (TX_RX == RX) {
+                //il valore di ritorno di SYSCALL
+                //va nel registro v0
+                p->p_s.reg_v0 = term->recv_status;
+                term->recv_command = DEV_C_ACK;
+            }
+            else if (TX_RX == TX){
+                p->p_s.reg_v0 = term->transm_status;    
+                term->transm_command = DEV_C_ACK;
+            }
+            else{
+                PANIC();
+            }
         }
         else {
-            schedule(NULL);
-        } 
+            dev = (dtpreg_t *)(DEV_ADDRESS(IntlineNo,DevNo));
+            //Primo processo in attesa sul semaforo
+            if ((p = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
+                PANIC();
 
-   
+            //Copiamo lo stato del device nel registro A1
+            p->p_s.reg_a1 = dev->status;
+
+            //Incrementiamo il valore del semaforo
+            Verhogen(&devs[DevNo][IntlineNo-3]);
+            
+            //Invio acknowledgement interrupt        
+            dev->command = DEV_C_ACK;
+        }
+        blocked_processes-- ; 
     }
+    if(running_process != NULL){
+        //eventuali calcoli sui tempi
+        LDST(old_process_state);
+    }
+    else {
+        schedule(NULL);
+    } 
+
 }
     
 

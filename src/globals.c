@@ -18,8 +18,12 @@ int blocked_processes ;
 /*debug variables*/
 int devnumber = -1 ;
 int linenumber = -1 ;
-int debug = -1;
+int debug = -1 ;
 struct list_head *sem_head = NULL ;
+
+void setDebug(int d){
+    debug = d ;
+}
 
 void state_copy(state_t *s1, state_t *s2){
 
