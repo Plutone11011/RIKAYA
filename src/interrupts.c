@@ -124,7 +124,8 @@ void interrupt_handler(){
             //Invio acknowledgement interrupt        
             dev->command = DEV_C_ACK;
         }
-        blocked_processes-- ; 
+        blocked_processes-- ;
+        active_processes++; 
     }
     if(running_process != NULL){
         //eventuali calcoli sui tempi

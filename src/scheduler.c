@@ -11,7 +11,6 @@ void schedule(state_t *old){
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
     if (ready_processes > 0){
-
         //spostato inserimento del running process
         //nell'interrupt handler, sotto timeslice
         //perché potrebbe avere priorità maggiore degli altri
@@ -26,6 +25,12 @@ void schedule(state_t *old){
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
         LDST(&running_process->p_s);
     }
+    else if (ready_processes == 0 && active_processes == 1){
+        //non ci sono processi ready ma un processo deve 
+        //ancora essere terminato
+        setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+        LDST(old);
+    }
     else {
         if (blocked_processes > 0){
             //lo scheduler non deve prendere nessuna
@@ -33,17 +38,20 @@ void schedule(state_t *old){
             //ma deve aspettare che i processi terminino
             //le operazioni I/O
             status = getSTATUS();
-            int i ;
             status |= STATUS_IEc ;
+            /*
+            int i ;
+            
             //abilita interrupt device I/O
             for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
                 status |= STATUS_IM(i) ;
             }
             //forse necessario disabilitare timer
             //visto che ha priorità maggiore degli 
-            //interrupt dei device I/O
+            //interrupt dei device I/O*/
             status &= (~STATUS_TE);
-            setSTATUS(status);
+
+            setSTATUS(STATUS_ALL_INT_ENABLE(status));
             WAIT();
         }
         else {
@@ -72,7 +80,7 @@ void insertProcqReady(state_t *old, pcb_t *proc){
             }
             proc->priority = proc->original_priority ;
             
-        }//allora è stato invocato dallo scheduler
+        }
 
         insertProcQ(&ready_queue,proc);
         ready_processes++ ;

@@ -10,7 +10,6 @@ void SYS_handler () {
     state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
     int retval ;//valore ritornato da certe syscall
     
-
     int scheduler = 1 ;
     unsigned int cause = old_process_state->cause ;
     unsigned int A1 = old_process_state->reg_a1;
@@ -85,10 +84,13 @@ void SYS_handler () {
         if (running_process != NULL){
             //rieseguo il processo che ha richiesto
             //la system call al kernel
+            //setDebug(3);
             old_process_state->pc_epc += 4 ;
+            setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
             LDST(old_process_state);
         }
         else {
+            //setDebug(4);
             //se il running process è NULL
             //non bisogna aggiornargli lo stato corrente
             schedule(NULL);
@@ -238,7 +240,8 @@ void Get_CPU_Time (cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
 */
 
 int CreateProcess (state_t *statep, int priority, void ** cpid) {
-
+    
+    
     pcb_t *new_child = allocPcb();
     int success = -1;
 
@@ -252,6 +255,7 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
         //new_child->p_s = *statep; usare funzione copia strutture
         new_child->priority = new_child->original_priority = priority;
 
+        active_processes++ ;
         /* 
             ? prima attivazione != creazione
             new_child->created_time = TOD_HI;
@@ -325,6 +329,9 @@ int TerminateProcess (void ** pid) {
             outBlocked(*pid);
             blocked_processes-- ;
         }
+        else {
+            active_processes-- ;
+        }
 
 //  Eliminiamo i legami di parentela di pid
         outChild(*pid);
@@ -391,6 +398,9 @@ void Passeren (int *semaddr) {
     coda del semaforo.
 */
     if (*semaddr < 0) {
+        
+        blocked_processes++ ;
+        active_processes-- ;
 
         //il processo sospeso sul semaforo ripristina la
         //priorità originale e salva il suo stato
@@ -405,7 +415,7 @@ void Passeren (int *semaddr) {
             state_copy(&suspended_pcb->p_s,old);
         }
         
-
+        
         insertBlocked(semaddr, suspended_pcb);
     }
 }
@@ -457,9 +467,6 @@ int Do_IO (unsigned int command, unsigned int *reg) {
     termreg_t *term ;
 //  Info sul device
     whichDevice(&IntlineNo, &DevNo, reg);
-    
-    blocked_processes++ ;
-
     
 
     if (IntlineNo < 7) {

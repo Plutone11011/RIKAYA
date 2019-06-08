@@ -34,7 +34,7 @@
 #define RECVD	5
 #define TRANSM 5
 
-#define STATUS_ALL_INT_ENABLE(x)    (x | (0xFF << 8))
+
 
 #define CLOCKINTERVAL	100000UL	/* interval to V clock semaphore */
 
@@ -124,7 +124,6 @@ void print(char *msg) {
 		status = SYSCALL(WAITIO, command, (unsigned int)base, FALSE);
 
 		/*		PANIC(); */
-		setDebug(status);
 		if ((status & TERMSTATMASK) != TRANSM)
 			PANIC();
 
@@ -149,24 +148,22 @@ void test() {
 	 
 	if (testsem != 1) { print("error: p1 v(testsem) with no effects\n"); PANIC(); }
 	print("p1 v(testsem)\n");
-	#if 0
 	/* set up states of the other processes */
-
+	
 	/* set up p2's state */
 	STST(&p2state);			/* create a state area using p1's state    */
-
 	/* stack of p2 should sit above ??????  */
 	p2state.reg_sp = p2state.reg_sp - FRAME_SIZE;
 
 	/* p2 starts executing function p2 */
 	p2state.pc_epc = (memaddr)p2;
-
+	
 	/* p2 has interrupts on and unmasked */
 	p2state.status = STATUS_ALL_INT_ENABLE(p2state.status);
 
-
 	/* Set up p3's state */
 	STST(&p3state);
+	
 
 	/* p3's stack is another 1K below p2's one */
 	p3state.reg_sp = p2state.reg_sp - FRAME_SIZE;
@@ -176,7 +173,6 @@ void test() {
 
 	/* Set up p4's state */
 	STST(&p4state);
-
 	/* p4's stack is another 1k below p3's one */
 	p4state.reg_sp = p3state.reg_sp - FRAME_SIZE;
 	p4state.pc_epc = (memaddr)p4;
@@ -252,7 +248,7 @@ void test() {
 	SYSCALL(CREATEPROCESS, (int)&p2state, DEFAULT_PRIORITY, 0);				/* start p2     */
 
 	print("p2 was started\n");
-
+#if 0
 	SYSCALL(VERHOGEN, (int)&startp2, 0, 0);					/* V(startp2)   */
 
 	/* P1 blocks until p2 finishes and Vs endp2 */
@@ -315,7 +311,6 @@ void p2() {
 	cpu_t	user_t1, user_t2;	 /* user time used       */
 	cpu_t	kernel_t1, kernel_t2;	 /* kernel time used       */
 	cpu_t	wallclock_t1, wallclock_t2;	 /* wallclock time used       */
-
 	/* startp2 is initialized to 0. p1 Vs it then waits for p2 termination */
 	SYSCALL(PASSEREN, (int)&startp2, 0, 0);				/* P(startp2)   */
 

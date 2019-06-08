@@ -185,6 +185,8 @@ typedef int S32;
 
 /* All interrupts unmasked */
 #define STATUS_INT_UNMASKED 0x0000ff00
+#define STATUS_ALL_INT_ENABLE(x)    (x | STATUS_INT_UNMASKED)
+#define STATUS_ALL_INT_DISABLE(x) (x & (~STATUS_INT_UNMASKED))
 
 #define STATUS_IM(line)      (1U << (8 + (line)))
 #define STATUS_IM_BIT(line)  (8 + (line))

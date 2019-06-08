@@ -13,7 +13,11 @@ int terms[DEV_PER_INT][2];
 //bisogna contare quanti processi sono bloccati
 //perché il kernel potrebbe doversi fermare, temporaneamente
 //nel caso in cui non ci siano processi ready, ma processi waiting
-int blocked_processes ;
+//il numero di processi attivi coincide con il numero di processi
+//ready e in esecuzione, in questo modo se non ci sono processi ready
+//ready ma c'è ancora un processo che necessita di essere 
+//terminato, lo scheduler può rilevarlo
+int blocked_processes, active_processes ;
 
 /*debug variables*/
 int devnumber = -1 ;
@@ -43,9 +47,8 @@ void init_Kernel_Vars(){
 
     int i, j ;
     mkEmptyProcQ(&ready_queue);
-    ready_processes = 0 ;
     running_process = NULL ;
-    blocked_processes = 0 ;
+    blocked_processes = active_processes = ready_processes = 0 ;
     //inizialmente a 0 perché qualora avvenga subito
     //un'operazione di I/O (syscall 7 Do_IO)
     //il processo deve bloccarsi finché l'operazione 

@@ -4,7 +4,7 @@
 #include "pcb.h"
 
 extern struct list_head ready_queue ;
-extern int ready_processes ;
+extern int ready_processes, active_processes ;
 extern pcb_t *running_process ;
 
 
