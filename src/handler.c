@@ -54,7 +54,7 @@ void SYS_handler () {
                     Wait_Clock();
                     break;
                 case WAITIO:
-                    retval = Do_IO(A1,(unsigned int*)A2);
+                    retval = Do_IO(A1,(unsigned int*)A2,A3);
                     break;
                 case SETTUTOR:  
                     Set_Tutor();
@@ -458,7 +458,7 @@ void Wait_Clock () {
         istanze multiple, per cui bisogna distinguere quale
         di esse abbia effettivamente lanciato l’eccezione.
 */
-int Do_IO (unsigned int command, unsigned int *reg) {
+int Do_IO (unsigned int command, unsigned int *reg, unsigned int tx_rx) {
 
     int IntlineNo, DevNo; //numero linea, device
     int status = -1;//   Stato del device alla fine dell'operazione
@@ -477,17 +477,10 @@ int Do_IO (unsigned int command, unsigned int *reg) {
     }
     else if (IntlineNo == 7) {
         term = (termreg_t*)reg ;
-        if (command == DEV_C_ACK || command == DEV_C_RESET){
-            //decidere in quale subdevice scrivere comando
-        }
-        else if (command > 255){
-            //allora è un comando
-            //per il transmitter
-            //perché il carattere da trasmettere
-            //viene scritto nel secondo byte
+        if (tx_rx == FALSE){
             term->transm_command = command ;
             Passeren(&(terms[DevNo][TX]));
-            status = term->transm_status ;    
+            status = term->transm_status ;
         }
         else {
             //comando receive

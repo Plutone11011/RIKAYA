@@ -19,7 +19,7 @@ void Passeren(int *semaddr);
 int CreateProcess(state_t *statep, int priority, void **cpid);
 int TerminateProcess (void ** pid);
 void Wait_Clock();
-int Do_IO (unsigned int command, unsigned int *reg);
+int Do_IO (unsigned int command, unsigned int *reg, unsigned int tx_rx);
 void Set_Tutor ();
 int Spec_Passup (int type, state_t *old, state_t *new);
 void Get_pid_ppid (void ** pid, void ** ppid);

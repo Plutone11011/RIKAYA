@@ -12,7 +12,7 @@ extern int devs[DEV_PER_INT][NUM_LINES - 3];
 extern int terms[DEV_PER_INT][2];
 extern int blocked_processes ;
 
-/*deug variables*/
+/*debug variables*/
 extern int debug ;
 extern int linenumber ;
 extern int devnumber ;
