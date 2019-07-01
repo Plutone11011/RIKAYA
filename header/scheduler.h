@@ -10,6 +10,10 @@
 
 
 void schedule(state_t *old);
+//memorizza il tempo di inizio esecuzione del processo
+//per poter calcolare user time in futuro
+void set_lastScheduled(pcb_t *scheduled);
 void insertProcqReady(state_t *old, pcb_t *proc);
+void update_usertime(pcb_t *userproc);
 
 #endif

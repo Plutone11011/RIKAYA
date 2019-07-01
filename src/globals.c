@@ -62,6 +62,13 @@ void init_Kernel_Vars(){
         }
 
     }
-
     
+}
+
+//setta i campi cpu_t dei pcb
+//shiftando la parte alta del time of day
+void setHILOtime(cpu_t *time){
+    *time = TOD_HI ;
+    *time <<= 32 ;
+    *time += TOD_LO ;
 }

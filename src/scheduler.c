@@ -11,9 +11,7 @@ void schedule(state_t *old){
     //controlla se ci sono processi ready
     //se sì, manda il primo processo della coda
     if (ready_processes > 0){
-        //spostato inserimento del running process
-        //nell'interrupt handler, sotto timeslice
-        //perché potrebbe avere priorità maggiore degli altri
+        
         pcb_to_run = removeProcQ(&ready_queue);
 
         ready_processes-- ;
@@ -23,12 +21,14 @@ void schedule(state_t *old){
         running_process = pcb_to_run ;
         //log_process_order(running_process->original_priority);
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+        set_lastScheduled(running_process);
         LDST(&running_process->p_s);
     }
     else if (ready_processes == 0 && active_processes == 1){
         //non ci sono processi ready ma un processo deve 
         //ancora essere terminato
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+        set_lastScheduled(container_of(old,pcb_t,p_s));
         LDST(old);
     }
     else {
@@ -39,16 +39,7 @@ void schedule(state_t *old){
             //le operazioni I/O
             status = getSTATUS();
             status |= STATUS_IEc ;
-            /*
-            int i ;
-            
-            //abilita interrupt device I/O
-            for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
-                status |= STATUS_IM(i) ;
-            }
-            //forse necessario disabilitare timer
-            //visto che ha priorità maggiore degli 
-            //interrupt dei device I/O*/
+
             status &= (~STATUS_TE);
 
             setSTATUS(STATUS_ALL_INT_ENABLE(status));
@@ -59,6 +50,22 @@ void schedule(state_t *old){
         }
     }
 
+}
+
+void set_lastScheduled(pcb_t *scheduled){
+
+    setHILOtime(&scheduled->last_scheduled);
+}
+
+void update_usertime(pcb_t *userproc){
+
+    cpu_t interval ;
+    setHILOtime(&interval);
+
+    //user time è l'intervallo tra inizio esecuzione
+    //del codice utente e adesso
+    interval -= userproc->last_scheduled ;
+    userproc->user_time += interval ;
 }
 
 //inserisce un processo nella coda ready, che sia quello running

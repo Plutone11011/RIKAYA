@@ -52,7 +52,7 @@ pcb_t *allocPcb(void){
         lastPcb->p_semkey = NULL ;
         lastPcb->priority = lastPcb->original_priority = 0 ;
         lastPcb->tutor = FALSE;
-        lastPcb->user_time = lastPcb->kernel_time = lastPcb->last_scheduled = lastPcb->first_scheduled = 0;
+        lastPcb->user_time = lastPcb->kernel_time = lastPcb->wallclock_time = 0;
 
         setlist_head(lastPcb->p_child) ;
         setlist_head(lastPcb->p_sib) ;

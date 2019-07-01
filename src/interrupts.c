@@ -36,7 +36,8 @@ void interrupt_handler(){
     state_t *old_process_state = (state_t*)INTERRUPT_OLDAREA ;
     unsigned int cause = old_process_state->cause ;
 
-    
+    //processo si è interrotto, calcolo user time fino a qui
+    update_usertime(container_of(old_process_state,pcb_t,p_s));   
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
     //aggiornate
@@ -129,6 +130,7 @@ void interrupt_handler(){
     }
     if(running_process != NULL){
         //eventuali calcoli sui tempi
+        set_lastScheduled(container_of(old_process_state,pcb_t,p_s));
         LDST(old_process_state);
     }
     else {

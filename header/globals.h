@@ -22,5 +22,6 @@ void setDebug(int d);
 void state_copy(state_t *s1, state_t *s2);
 
 void init_Kernel_Vars();
+void setHILOtime(cpu_t *time);
 
 #endif 

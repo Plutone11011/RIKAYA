@@ -7,7 +7,7 @@
 typedef unsigned int memaddr;
 
 /* variable to contain CPU times */
-typedef unsigned int cpu_t;
+typedef unsigned long long cpu_t;
 
 /* Process Control Block (PCB) data structure */
 typedef struct pcb_t {
@@ -30,7 +30,10 @@ typedef struct pcb_t {
 	
 	int tutor;
 	/* Process times*/
-	cpu_t user_time, kernel_time, last_scheduled, first_scheduled;
+	cpu_t user_time, kernel_time;
+	cpu_t wallclock_time ;
+	cpu_t last_scheduled ;
+	//cpu_t last_time ?
 
 } pcb_t;
 

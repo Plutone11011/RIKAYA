@@ -15,7 +15,9 @@ void SYS_handler () {
     unsigned int A1 = old_process_state->reg_a1;
     unsigned int A2 = old_process_state->reg_a2;
     unsigned int A3 = old_process_state->reg_a3;
-
+    //il processo ha richiesto syscall al kernel
+    //quindi si calcola user time fino a qui
+    update_usertime(container_of(old_process_state,pcb_t,p_s));
     //distinzione tra syscall e breakpoint
     if (CAUSE_EXCCODE_GET(cause) == EXC_BREAKPOINT){
         //gestione eccezione breakpoint
@@ -84,9 +86,10 @@ void SYS_handler () {
         if (running_process != NULL){
             //rieseguo il processo che ha richiesto
             //la system call al kernel
-            //setDebug(3);
+            //non c'è bisogno di rischedulare
             old_process_state->pc_epc += 4 ;
             setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+            set_lastScheduled(container_of(old_process_state,pcb_t,p_s));
             LDST(old_process_state);
         }
         else {
@@ -221,7 +224,7 @@ void Get_CPU_Time (cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
         //currentTOD = currentTOD << 32;
         currentTOD += TOD_LO;
 
-        *wallclock = currentTOD - running_process->first_scheduled;
+        //*wallclock = currentTOD - running_process->first_scheduled;
     }
 
 }
@@ -252,9 +255,12 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
             insertChild(running_process, new_child);    
         }
         state_copy(&new_child->p_s,statep);
-        //new_child->p_s = *statep; usare funzione copia strutture
+        
         new_child->priority = new_child->original_priority = priority;
+        new_child->user_time = new_child->kernel_time = 0 ;
 
+        setHILOtime(&(new_child->wallclock_time));
+    
         active_processes++ ;
         /* 
             ? prima attivazione != creazione
