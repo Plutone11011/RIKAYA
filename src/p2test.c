@@ -248,7 +248,7 @@ void test() {
 	SYSCALL(CREATEPROCESS, (int)&p2state, DEFAULT_PRIORITY, 0);				/* start p2     */
 
 	print("p2 was started\n");
-#if 0
+
 	SYSCALL(VERHOGEN, (int)&startp2, 0, 0);					/* V(startp2)   */
 
 	/* P1 blocks until p2 finishes and Vs endp2 */
@@ -257,7 +257,7 @@ void test() {
 	/* make sure we really blocked */
 	if (p1p2synch == 0)
 		print("error: p1/p2 synchronization bad\n");
-
+#if 0
 	SYSCALL(CREATEPROCESS, (int)&p3state, DEFAULT_PRIORITY, 0);				/* start p3  */
 
 	print("p3 is started\n");

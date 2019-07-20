@@ -32,7 +32,7 @@ typedef struct pcb_t {
 	/* Process times*/
 	cpu_t user_time, kernel_time;
 	cpu_t wallclock_time ;
-	cpu_t last_scheduled ;
+	cpu_t last_scheduled, start_kernel ;
 	//cpu_t last_time ?
 
 } pcb_t;

@@ -17,7 +17,6 @@ void SYS_handler () {
     unsigned int A3 = old_process_state->reg_a3;
     //il processo ha richiesto syscall al kernel
     //quindi si calcola user time fino a qui
-    update_usertime(container_of(old_process_state,pcb_t,p_s));
     //distinzione tra syscall e breakpoint
     if (CAUSE_EXCCODE_GET(cause) == EXC_BREAKPOINT){
         //gestione eccezione breakpoint
@@ -89,7 +88,6 @@ void SYS_handler () {
             //non c'è bisogno di rischedulare
             old_process_state->pc_epc += 4 ;
             setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
-            set_lastScheduled(container_of(old_process_state,pcb_t,p_s));
             LDST(old_process_state);
         }
         else {

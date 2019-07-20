@@ -21,16 +21,14 @@ void schedule(state_t *old){
         running_process = pcb_to_run ;
         //log_process_order(running_process->original_priority);
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
-        set_lastScheduled(running_process);
         LDST(&running_process->p_s);
     }
-    else if (ready_processes == 0 && active_processes == 1){
+    /* else if (ready_processes == 0 && active_processes == 1){
         //non ci sono processi ready ma un processo deve 
         //ancora essere terminato
         setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
-        set_lastScheduled(container_of(old,pcb_t,p_s));
         LDST(old);
-    }
+    }*/
     else {
         if (blocked_processes > 0){
             //lo scheduler non deve prendere nessuna
@@ -52,21 +50,7 @@ void schedule(state_t *old){
 
 }
 
-void set_lastScheduled(pcb_t *scheduled){
 
-    setHILOtime(&scheduled->last_scheduled);
-}
-
-void update_usertime(pcb_t *userproc){
-
-    cpu_t interval ;
-    setHILOtime(&interval);
-
-    //user time è l'intervallo tra inizio esecuzione
-    //del codice utente e adesso
-    interval -= userproc->last_scheduled ;
-    userproc->user_time += interval ;
-}
 
 //inserisce un processo nella coda ready, che sia quello running
 //o uno nuovo. Aggiorna lo stato del pcb e ne ripristina la priorità
