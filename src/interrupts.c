@@ -36,6 +36,10 @@ void interrupt_handler(){
     state_t *old_process_state = (state_t*)INTERRUPT_OLDAREA ;
     unsigned int cause = old_process_state->cause ;
 
+    if (running_process){
+        setHILOtime(&running_process->start_kernel);
+    }
+    update_usertime(running_process);
     //processo si è interrotto, calcolo user time fino a qui  
     //se il processor local timer ha generato l'interrupt
     //si chiama lo scheduler con le priorità
@@ -47,10 +51,11 @@ void interrupt_handler(){
                 ready_pcb->priority++ ;
             }
         }
+        update_kerneltime(running_process);
         schedule(old_process_state);
     }
     else {
-        pcb_t *p;   //  Processo da risvegliare
+        pcb_t *wakeupProc;   //  Processo da risvegliare
         dtpreg_t *dev;  //  Registro device
         termreg_t *term ;
         
@@ -88,21 +93,22 @@ void interrupt_handler(){
             else 
                 PANIC();
             
-            if ((p = headBlocked(&terms[DevNo][TX_RX])) == NULL)
+            //se non esiste il processo bloccato su quel device e quella linea, panic
+            if ((wakeupProc = headBlocked(&terms[DevNo][TX_RX])) == NULL)
                 PANIC();
 
-            //  V
+            //  V, libera processo
             Verhogen(&terms[DevNo][TX_RX]);
 
             //  ACK
             if (TX_RX == RX) {
                 //il valore di ritorno di SYSCALL
                 //va nel registro v0
-                p->p_s.reg_v0 = term->recv_status;
+                wakeupProc->p_s.reg_v0 = term->recv_status;
                 term->recv_command = DEV_C_ACK;
             }
             else if (TX_RX == TX){
-                p->p_s.reg_v0 = term->transm_status;    
+                wakeupProc->p_s.reg_v0 = term->transm_status;    
                 term->transm_command = DEV_C_ACK;
             }
             else{
@@ -112,11 +118,11 @@ void interrupt_handler(){
         else {
             dev = (dtpreg_t *)(DEV_ADDRESS(IntlineNo,DevNo));
             //Primo processo in attesa sul semaforo
-            if ((p = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
+            if ((wakeupProc = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
                 PANIC();
 
             //Copiamo lo stato del device nel registro A1
-            p->p_s.reg_a1 = dev->status;
+            wakeupProc->p_s.reg_a1 = dev->status;
 
             //Incrementiamo il valore del semaforo
             Verhogen(&devs[DevNo][IntlineNo-3]);
@@ -124,11 +130,12 @@ void interrupt_handler(){
             //Invio acknowledgement interrupt        
             dev->command = DEV_C_ACK;
         }
-        blocked_processes-- ;
-        active_processes++; 
+        
+        update_kerneltime(wakeupProc); 
     }
     if(running_process != NULL){
         //eventuali calcoli sui tempi
+        setHILOtime(&running_process->last_scheduled);
         LDST(old_process_state);
     }
     else {

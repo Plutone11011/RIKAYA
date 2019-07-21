@@ -20,10 +20,7 @@ int terms[DEV_PER_INT][2];
 int blocked_processes, active_processes ;
 
 /*debug variables*/
-int devnumber = -1 ;
-int linenumber = -1 ;
-int debug = -1 ;
-struct list_head *sem_head = NULL ;
+int debug = 0 ;
 
 void setDebug(int d){
     debug = d ;
@@ -68,7 +65,7 @@ void init_Kernel_Vars(){
 //setta i campi cpu_t dei pcb
 //shiftando la parte alta del time of day
 void setHILOtime(cpu_t *time){
-    *time = TOD_HI ;
+    *time = getTODHI() ;
     *time <<= 32 ;
-    *time += TOD_LO ;
+    *time += getTODLO() ;
 }

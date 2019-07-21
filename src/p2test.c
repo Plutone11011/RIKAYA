@@ -332,7 +332,6 @@ void p2() {
 
 	now1 = getTODLO();                  				/* time of day   */
 	SYSCALL(GETCPUTIME, (int)&user_t1, (int)&kernel_t1, (int)&wallclock_t1);			/* CPU time used */
-
 	/* delay for several milliseconds */
 	for (i = 1; i < LOOPNUM; i++)
 		;

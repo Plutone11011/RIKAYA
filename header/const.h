@@ -77,6 +77,7 @@ typedef int S32;
 #define BUS_TODHIGH 0x10000018
 
 #define getTODLO()  (*((unsigned int*)BUS_TODLOW))
+#define getTODHI()  (*((unsigned int*)BUS_TODHIGH))
 
 #define DEV_USED_INTS 5 /* Number of ints reserved for devices: 3,4,5,6,7 */
 

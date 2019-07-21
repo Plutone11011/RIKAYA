@@ -9,14 +9,22 @@ void SYS_handler () {
     bisogna fare il passup*/
     state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
     int retval ;//valore ritornato da certe syscall
-    
+
+
     int scheduler = 1 ;
     unsigned int cause = old_process_state->cause ;
     unsigned int A1 = old_process_state->reg_a1;
     unsigned int A2 = old_process_state->reg_a2;
     unsigned int A3 = old_process_state->reg_a3;
+
+    //salvo pcb che ha rischiesto syscall nel caso venga sospeso
+    pcb_t *requestingProcess = running_process ;
     //il processo ha richiesto syscall al kernel
     //quindi si calcola user time fino a qui
+    if (requestingProcess){
+        setHILOtime(&requestingProcess->start_kernel);
+    }
+    update_usertime(requestingProcess);
     //distinzione tra syscall e breakpoint
     if (CAUSE_EXCCODE_GET(cause) == EXC_BREAKPOINT){
         //gestione eccezione breakpoint
@@ -41,6 +49,7 @@ void SYS_handler () {
                     break;
                 case TERMINATEPROCESS:
                     retval = TerminateProcess((void**)A1);
+                    setDebug(retval);
                     if (retval == -1){
                         PANIC();
                     }
@@ -78,6 +87,7 @@ void SYS_handler () {
         }
     }
 
+    update_kerneltime(requestingProcess);
     //forse questa parte può essere messa direttamente 
     //nel if-else sopra 
     if (scheduler){
@@ -88,6 +98,7 @@ void SYS_handler () {
             //non c'è bisogno di rischedulare
             old_process_state->pc_epc += 4 ;
             setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+            setHILOtime(&running_process->last_scheduled);
             LDST(old_process_state);
         }
         else {
@@ -218,11 +229,9 @@ void Get_CPU_Time (cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
         
         cpu_t currentTOD;
        
-        currentTOD = TOD_HI;
-        //currentTOD = currentTOD << 32;
-        currentTOD += TOD_LO;
+        setHILOtime(&currentTOD);
 
-        //*wallclock = currentTOD - running_process->first_scheduled;
+        *wallclock = currentTOD - running_process->wallclock_time;
     }
 
 }
@@ -296,14 +305,14 @@ int TerminateProcess (void ** pid) {
     pcb_t **real_pid = (pcb_t**)pid ;
 //  Se non viene specificato un pid:
     if (real_pid == 0 || real_pid == NULL) 
-        *real_pid = running_process;
+        real_pid = &running_process;
     
 //  Se il processo da terminare è discendente del processo corrente
 //o coincidono
     if (Descendant(*real_pid, running_process) || (*real_pid == running_process)) {
         
         //  Se il processo da terminare ha dei figli:
-        if (!list_empty(&(*real_pid)->p_child)) {
+        if (!emptyChild(*real_pid)) {
             
             struct list_head* iter;
             pcb_t *first_child = container_of((*real_pid)->p_child.next,pcb_t,p_child);
@@ -313,7 +322,7 @@ int TerminateProcess (void ** pid) {
     verranno adottati dal processo in cima all'albero. 
 */
             if (tutor == NULL){
-                tutor = TreeTop(*pid);
+                tutor = TreeTop(*real_pid);
             }
             outChild(first_child); 
             insertChild(tutor, first_child);
@@ -338,13 +347,16 @@ int TerminateProcess (void ** pid) {
         }
 
 //  Eliminiamo i legami di parentela di pid
-        outChild(*pid);
+        outChild(*real_pid);
 
 //  Eliminare il processo dalla RQ, diminuire n. processi ready
-        outProcQ(&ready_queue, *pid);
+        outProcQ(&ready_queue, *real_pid);
         ready_processes--;
-        freePcb(*pid);  
+        freePcb(*real_pid);  
 
+        if (*real_pid == running_process){
+            running_process = NULL ;    
+        }
         success = 0;
     }
 
@@ -375,6 +387,8 @@ void Verhogen (int *semaddr){
        
 //   Rimuoviamo p dalla coda:
        p = removeBlocked(semaddr);
+       blocked_processes-- ;
+       active_processes++;
        
        if (p != NULL){
            insertProcqReady(NULL,p);
