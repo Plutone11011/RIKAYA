@@ -20,7 +20,7 @@ void schedule(state_t *old){
         }
         running_process = pcb_to_run ;
         //log_process_order(running_process->original_priority);
-        setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+        set_timer();
         setHILOtime(&running_process->last_scheduled);
         LDST(&running_process->p_s);
     }
@@ -39,7 +39,7 @@ void schedule(state_t *old){
             status = getSTATUS();
             status |= STATUS_IEc ;
 
-            status &= (~STATUS_TE);
+            //status &= (~STATUS_TE);
 
             setSTATUS(STATUS_ALL_INT_ENABLE(status));
             WAIT();
@@ -92,5 +92,25 @@ void insertProcqReady(state_t *old, pcb_t *proc){
 
         insertProcQ(&ready_queue,proc);
         ready_processes++ ;
+    }
+}
+
+//decide se settare il timer per lo scheduler
+// o settare il timer per il clock della waitclock
+void set_timer(){
+
+    //calcola quanto tempo rimane allo scadere del prossimo pseudoclock
+    //modulando il time of day corrente
+    int pseudoclock_remainingTime = SCHED_PSEUDO_CLOCK - ((getTODLO()/TIME_SCALE) % SCHED_PSEUDO_CLOCK) ;
+    //setDebug(pseudoclock_remainingTime);
+
+    if (pseudoclock_remainingTime <= SCHED_TIME_SLICE){
+
+        timer_cause = PSEUDOCLOCK ;
+        setTIMER(pseudoclock_remainingTime*TIME_SCALE);
+    }   
+    else {
+        timer_cause = TIMESLICE ;
+        setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
     }
 }

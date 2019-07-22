@@ -45,10 +45,25 @@ void interrupt_handler(){
     //si chiama lo scheduler con le priorità
     //aggiornate
     if (CAUSE_IP_GET(cause,INT_T_SLICE)){
-        if (!emptyProcQ(&ready_queue)){
-            pcb_t *ready_pcb ;
-            list_for_each_entry(ready_pcb,&ready_queue,p_next){
-                ready_pcb->priority++ ;
+        if (timer_cause == TIMESLICE){
+            //timeslice
+            if (!emptyProcQ(&ready_queue)){
+                pcb_t *ready_pcb ;
+                list_for_each_entry(ready_pcb,&ready_queue,p_next){
+                    ready_pcb->priority++ ;
+                }
+            }
+        }
+        if (ready_processes == 0 && blocked_processes > 0){
+                set_timer();
+        }
+        else {
+            while (waitclockSem < 0){
+                //risveglia tutti i processi sullo pseudoclock
+                Verhogen(&waitclockSem);
+            }
+            if (ready_processes == 0 && blocked_processes > 0){
+                set_timer();
             }
         }
         update_kerneltime(running_process);
@@ -121,11 +136,9 @@ void interrupt_handler(){
             if ((wakeupProc = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
                 PANIC();
 
-            //Copiamo lo stato del device nel registro A1
-            wakeupProc->p_s.reg_a1 = dev->status;
-
-            //Incrementiamo il valore del semaforo
             Verhogen(&devs[DevNo][IntlineNo-3]);
+            
+            wakeupProc->p_s.reg_v0 = dev->status;
             
             //Invio acknowledgement interrupt        
             dev->command = DEV_C_ACK;
@@ -135,6 +148,7 @@ void interrupt_handler(){
     }
     if(running_process != NULL){
         //eventuali calcoli sui tempi
+        set_timer();
         setHILOtime(&running_process->last_scheduled);
         LDST(old_process_state);
     }

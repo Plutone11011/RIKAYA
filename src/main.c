@@ -22,9 +22,9 @@ void init_first_process(){
     statep.reg_sp = RAMTOP - FRAME_SIZE ;
 
     
-    //isola l'interrupt mask e accende il bit dell'interval timer
-    
+    //bit interval timer e processor local timer 
     statep.status = STATUS_IM(INT_T_SLICE) ;
+    statep.status = STATUS_IM(INT_TIMER) ;
     //abilita interrupt dei device I/O
     for (i = INT_LOWEST; i < INT_LOWEST + DEV_USED_INTS; i++){
         statep.status |= STATUS_IM(i) ;

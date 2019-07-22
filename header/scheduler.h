@@ -16,5 +16,6 @@ void set_lastScheduled(pcb_t *scheduled);
 void insertProcqReady(state_t *old, pcb_t *proc);
 void update_usertime(pcb_t *userproc);
 void update_kerneltime(pcb_t *kernelproc);
+void set_timer();
 
 #endif

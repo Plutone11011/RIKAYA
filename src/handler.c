@@ -49,7 +49,6 @@ void SYS_handler () {
                     break;
                 case TERMINATEPROCESS:
                     retval = TerminateProcess((void**)A1);
-                    setDebug(retval);
                     if (retval == -1){
                         PANIC();
                     }
@@ -59,8 +58,8 @@ void SYS_handler () {
                     break;
                 case PASSEREN:
                     Passeren((int*)A1);
+                    break ;
                 case WAITCLOCK:
-                       break;
                     Wait_Clock();
                     break;
                 case WAITIO:
@@ -97,7 +96,7 @@ void SYS_handler () {
             //la system call al kernel
             //non c'è bisogno di rischedulare
             old_process_state->pc_epc += 4 ;
-            setTIMER(SCHED_TIME_SLICE*TIME_SCALE);
+            set_timer();
             setHILOtime(&running_process->last_scheduled);
             LDST(old_process_state);
         }
@@ -344,14 +343,16 @@ int TerminateProcess (void ** pid) {
         }
         else {
             active_processes-- ;
+            if (*real_pid != running_process){
+                //non è in esecuzione, è ready
+                outProcQ(&ready_queue, *real_pid);
+                ready_processes--;
+            }
         }
 
-//  Eliminiamo i legami di parentela di pid
+        // Eliminiamo i legami di parentela di pid
         outChild(*real_pid);
-
-//  Eliminare il processo dalla RQ, diminuire n. processi ready
-        outProcQ(&ready_queue, *real_pid);
-        ready_processes--;
+        
         freePcb(*real_pid);  
 
         if (*real_pid == running_process){
@@ -387,11 +388,12 @@ void Verhogen (int *semaddr){
        
 //   Rimuoviamo p dalla coda:
        p = removeBlocked(semaddr);
-       blocked_processes-- ;
-       active_processes++;
+       
        
        if (p != NULL){
-           insertProcqReady(NULL,p);
+            insertProcqReady(NULL,p);
+            blocked_processes-- ;
+            active_processes++;
        }  
    }
     
@@ -417,13 +419,14 @@ void Passeren (int *semaddr) {
 */
     if (*semaddr < 0) {
         
-        blocked_processes++ ;
-        active_processes-- ;
+        
 
         //il processo sospeso sul semaforo ripristina la
         //priorità originale e salva il suo stato
         //prima dell'eccezione
         if (running_process != NULL){
+            blocked_processes++ ;
+            active_processes-- ;
             suspended_pcb = running_process ;
             running_process->priority = running_process->original_priority ;
             running_process = NULL ;
@@ -431,10 +434,9 @@ void Passeren (int *semaddr) {
             old = (state_t*)SYSBK_OLDAREA ;
             old->pc_epc += 4 ;
             state_copy(&suspended_pcb->p_s,old);
+            insertBlocked(semaddr, suspended_pcb);
         }
         
-        
-        insertBlocked(semaddr, suspended_pcb);
     }
 }
 //#############################################################
@@ -448,7 +450,7 @@ void Passeren (int *semaddr) {
     riattivati al prossimo tick.
 */
 void Wait_Clock () {
-
+    Passeren(&waitclockSem);
 }
 //#############################################################
 //##################### SYS7 Do_IO ############################

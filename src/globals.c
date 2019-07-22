@@ -10,6 +10,7 @@ pcb_t *running_process  ;
 //del kernel e non dai processi
 int devs[DEV_PER_INT][NUM_LINES - 3];
 int terms[DEV_PER_INT][2];
+int waitclockSem, timer_cause ;
 //bisogna contare quanti processi sono bloccati
 //perché il kernel potrebbe doversi fermare, temporaneamente
 //nel caso in cui non ci siano processi ready, ma processi waiting
@@ -20,7 +21,7 @@ int terms[DEV_PER_INT][2];
 int blocked_processes, active_processes ;
 
 /*debug variables*/
-int debug = 0 ;
+int debug = -1 ;
 
 void setDebug(int d){
     debug = d ;
@@ -50,6 +51,7 @@ void init_Kernel_Vars(){
     //un'operazione di I/O (syscall 7 Do_IO)
     //il processo deve bloccarsi finché l'operazione 
     //non è completata, ovvero quando viene sollevato un'interrupt
+    waitclockSem = 0 ;
     for (i = 0; i < DEV_PER_INT; i++){
         for (j = 0; j < NUM_LINES - 3; j++){
             devs[i][j] = 0 ;

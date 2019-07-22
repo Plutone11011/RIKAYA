@@ -143,8 +143,6 @@ void print(char *msg) {
 void test() {	
 
 	SYSCALL(VERHOGEN, (int)&testsem, 0, 0);					/* V(testsem)   */
-
-	
 	 
 	if (testsem != 1) { print("error: p1 v(testsem) with no effects\n"); PANIC(); }
 	print("p1 v(testsem)\n");
@@ -257,15 +255,15 @@ void test() {
 	/* make sure we really blocked */
 	if (p1p2synch == 0)
 		print("error: p1/p2 synchronization bad\n");
-#if 0
+
 	SYSCALL(CREATEPROCESS, (int)&p3state, DEFAULT_PRIORITY, 0);				/* start p3  */
 
 	print("p3 is started\n");
-
+	setDebug(0);
 	/* P1 blocks until p3 ends */
 	SYSCALL(PASSEREN, (int)&endp3, 0, 0);					/* P(endp3)     */
 
-
+#if 0
 	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int)&p4pid);		/* start p4     */
 
 	SYSCALL(CREATEPROCESS, (int)&p5state, DEFAULT_PRIORITY, 0); 		/* start p5     */
@@ -357,7 +355,6 @@ void p2() {
 	}
 
 	p1p2synch = 1;				/* p1 will check this */
-
 	SYSCALL(VERHOGEN, (int)&endp2, 0, 0);				/* V(endp2)     */
 
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);			/* terminate p2 */
