@@ -263,9 +263,9 @@ void test() {
 	/* P1 blocks until p3 ends */
 	SYSCALL(PASSEREN, (int)&endp3, 0, 0);					/* P(endp3)     */
 
-#if 0
-	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int)&p4pid);		/* start p4     */
 
+	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int)&p4pid);		/* start p4     */
+#if 0
 	SYSCALL(CREATEPROCESS, (int)&p5state, DEFAULT_PRIORITY, 0); 		/* start p5     */
 
 	SYSCALL(CREATEPROCESS, (int)&p6state, DEFAULT_PRIORITY, 0);		/* start p6		*/

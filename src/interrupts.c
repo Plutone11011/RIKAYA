@@ -54,17 +54,15 @@ void interrupt_handler(){
                 }
             }
         }
-        if (ready_processes == 0 && blocked_processes > 0){
-                set_timer();
-        }
         else {
             while (waitclockSem < 0){
                 //risveglia tutti i processi sullo pseudoclock
                 Verhogen(&waitclockSem);
             }
-            if (ready_processes == 0 && blocked_processes > 0){
-                set_timer();
-            }
+
+        }
+        if (ready_processes == 0 && blocked_processes > 0){
+            set_timer();
         }
         update_kerneltime(running_process);
         schedule(old_process_state);

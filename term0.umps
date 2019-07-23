@@ -4,3 +4,6 @@ p2 starts
 p2 v/p pairs successfully
 p2 is OK
 p3 is started
+p3 - WAITCLOCK OK
+p3 - CPU time correctly maintained
+kkernel panic()
