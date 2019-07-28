@@ -111,7 +111,7 @@ lista si usano:
 ___
 ## 3. Scheduler
 
-Lo scheduler implementato è basato su **priorità**, è **preemptive **in quanto concede un determinato **timeslice** di 3ms ad ogni processo.
+Lo scheduler implementato è basato su **priorità**, è **preemptive** in quanto concede un determinato **timeslice** di 3ms ad ogni processo.
 Ricorre alla tecnica di aging per evitare *starvation* dei processi a più bassa priorità: infatti ad ogni scadere del timeslice 
 viene incrementata la priorità di tutti i processi presenti della *Ready Queue*.
 ___
