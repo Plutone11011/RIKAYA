@@ -1,4 +1,5 @@
 #include "../header/handler.h"
+#include "../header/p2test.h"
 
 void SYS_handler () {
     /*controlla nel registro Cause se l'eccezione sollevata
@@ -8,10 +9,12 @@ void SYS_handler () {
     negli altri casi (breakpoint, sys > 10, user mode)
     bisogna fare il passup*/
     state_t *old_process_state = (state_t*)SYSBK_OLDAREA ;
+    state_t *handler = NULL;
+    int type = -1;
     int retval ;//valore ritornato da certe syscall
 
 
-    int scheduler = 1 ;
+    //int scheduler = 1 ;
     unsigned int cause = old_process_state->cause ;
     unsigned int A1 = old_process_state->reg_a1;
     unsigned int A2 = old_process_state->reg_a2;
@@ -29,6 +32,8 @@ void SYS_handler () {
     if (CAUSE_EXCCODE_GET(cause) == EXC_BREAKPOINT){
         //gestione eccezione breakpoint
         //con passup
+        handler = (state_t*)SYSBK_OLDAREA;
+        type = SYS5_SYSBK;
 
     }
     else if (CAUSE_EXCCODE_GET(cause) == EXC_SYSCALL){
@@ -41,18 +46,20 @@ void SYS_handler () {
                 case GETCPUTIME:
                     Get_CPU_Time((cpu_t*)A1, (cpu_t*)A2, (cpu_t*)A3);
                     break;
-                case CREATEPROCESS:
+                case CREATEPROCESS: {
                     retval = CreateProcess((state_t*)A1, A2,(void **)A3);
                     if (retval == -1){
                         PANIC();
                     }
                     break;
-                case TERMINATEPROCESS:
+                }
+                case TERMINATEPROCESS: {
                     retval = TerminateProcess((void**)A1);
                     if (retval == -1){
                         PANIC();
                     }
                     break ;
+                }
                 case VERHOGEN:
                     Verhogen((int*)A1);
                     break;
@@ -68,29 +75,80 @@ void SYS_handler () {
                 case SETTUTOR:  
                     Set_Tutor();
                     break;
-                case SPECPASSUP:
-                    Spec_Passup(A1, (state_t*)A2, (state_t*)A3);
+                case SPECPASSUP:{
+                    retval = Spec_Passup(A1, (state_t*)A2, (state_t*)A3);
+                    if (retval == -1) {
+                        print("wrong passup\n");
+                        PANIC();
+                    }
                     break;
-                case GETPID:
+                }
+                case GETPID:{
                     Get_pid_ppid((void **)A1, (void **)A2);
                     break;
-                default:
+                }
+                default: {
+                    // SYS_n° > 10 || SYS_n° < 1
+                    //setDebug(22);
+                    type = SYS5_SYSBK;
+                    handler = (state_t*)SYSBK_OLDAREA;
                     break ;
+                }
 
             }
 
         }
         else {
-            scheduler = 0 ;
+            //scheduler = 0 ;
             //eseguita in user mode
+            if (old_process_state->reg_a0 <= 10) {
+                old_process_state->cause = EXC_RESERVEDINSTR;
+                //*(state_t*)PGMTRAP_OLDAREA = *old_process_state;
+                state_copy((state_t*)PGMTRAP_OLDAREA, old_process_state);
+                handler = (state_t*)PGMTRAP_OLDAREA;
+                type = SYS5_PGMTRAP;
+            }
+            else {    
+                handler = (state_t*)SYSBK_OLDAREA;
+                type = SYS5_SYSBK;
+            }
+            
+        }
+    }
+    //E' necessario un Passup
+    if (type > -1) {
+        if (!specifiedHandler(type, handler)) {
+            TerminateProcess(NULL);
+            schedule(NULL);
+        }
+    }
+    // Gestito dal Kernel
+    else {
+        update_kerneltime(requestingProcess);
+        if (running_process != NULL){
+            //setDebug(5);
+            //rieseguo il processo che ha richiesto
+            //la system call al kernel
+            //non c'è bisogno di rischedulare
+            old_process_state->pc_epc += 4 ;
+            set_timer();
+            setHILOtime(&running_process->last_scheduled);
+            LDST(old_process_state);
+        }
+        else {
+            //setDebug(4);
+            //se il running process è NULL
+            //non bisogna aggiornargli lo stato corrente
+            schedule(NULL);
         }
     }
 
-    update_kerneltime(requestingProcess);
+/*     update_kerneltime(requestingProcess);
     //forse questa parte può essere messa direttamente 
     //nel if-else sopra 
     if (scheduler){
         //schedule();
+        setDebug(3);
         if (running_process != NULL){
             //rieseguo il processo che ha richiesto
             //la system call al kernel
@@ -109,10 +167,59 @@ void SYS_handler () {
     }
     else {
         //passup
+        setDebug(5);
+        if (!specifiedHandler(type, handler)) {
+            setDebug(10);
+            TerminateProcess((void**)running_process);
+            schedule(NULL);
+        }
     }
+ */
 }
 
+int specifiedHandler (int type, state_t* s) {
+    //int found = 0;
+    if (running_process != NULL && s != NULL) {
+        state_t *new, *old;
+        new = old = NULL;
 
+        switch(type) {
+            case SYS5_TLB: {
+                new = running_process->tlb_new;
+                old = running_process->tlb_old;
+                break;
+            }
+            case SYS5_PGMTRAP: {
+                //setDebug(0xFF);
+                new = running_process->pgmtp_new;
+                old = running_process->pgmtp_old;
+                break;
+            }  
+            case SYS5_SYSBK: {
+                new = running_process->sysbk_new;
+                old = running_process->sysbk_old;
+                break;
+            }
+            default: 
+                break;
+        }
+        if (new != NULL && old != NULL) {
+            //*old = *s;
+            state_copy(old, s);
+            update_kerneltime(running_process);
+            update_usertime(running_process);
+            //set_lastScheduled(running_process);
+            //setDebug(0xFE);
+            LDST(new);
+        }
+        else 
+            return 0;
+        
+    }
+    else
+        return 0;
+    //return found;
+}
 
 static void whichDevice (int *IntlineNo, int *DevNo, unsigned int *reg) {
 
@@ -278,7 +385,7 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
         success = 0;
 
         if (cpid != NULL)
-            *cpid = &new_child;
+            *cpid = new_child;
 
         insertProcqReady(NULL,new_child);
     }
@@ -308,7 +415,7 @@ int TerminateProcess (void ** pid) {
     
 //  Se il processo da terminare è discendente del processo corrente
 //o coincidono
-    if (Descendant(*real_pid, running_process) || (*real_pid == running_process)) {
+    if ((*real_pid == running_process) || Descendant(*real_pid, running_process)) {
         
         //  Se il processo da terminare ha dei figli:
         if (!emptyChild(*real_pid)) {
@@ -532,12 +639,12 @@ void Set_Tutor () {
 /*
 –   Questa chiamata registra quale handler di livello superiore
     debba essere attivato in caso di trap di Syscall/breakpoint
-    (type=0), TLB (type=1) o Program trap (type=2). Il significato
-    dei parametri old e new è lo stesso delle aree old e new
-    gestite dal codice della ROM: quando avviene una trap da
-    passare al gestore lo stato del processo che ha causato la
-    trap viene posto nell’area old e viene caricato lo stato
-    presente nell’area new. La system call deve essere
+    (type=0), TLB (type=1) o Program trap (type=2). 
+    Il significato dei parametri old e new è lo stesso delle 
+    aree old e new gestite dal codice della ROM: quando avviene 
+    una trap da passare al gestore lo stato del processo che ha 
+    causato la trap viene posto nell’area old e viene caricato 
+    lo stato presente nell’area new. La system call deve essere
     richiamata una sola volta per tipo. Se la system call ha
     successo restituisce 0, altrimenti -1.
 */
@@ -547,22 +654,42 @@ int Spec_Passup (int type, state_t *old, state_t *new) {
 
     switch (type) {
         case SYS5_SYSBK: {
-            //usare copia strutture
-            state_copy(old,&running_process->p_s);
-            //*old = running_process->p_s;
-            state_copy(&running_process->p_s,new);
-            //running_process->p_s = *new;
-            success = 0;
+            //Se non sono già specificati:
+            if (running_process->sysbk_new == NULL && running_process->sysbk_old == NULL) {
+                //usare copia strutture
+               /*  state_copy(running_process->sysbk_old, old);
+                state_copy(running_process->sysbk_new, new); */
+                //state_copy(old,&running_process->p_s);
+                //*old = running_process->p_s;
+                //state_copy(&running_process->p_s,new);
+                //running_process->p_s = *new;
+                running_process->sysbk_new = new;
+                running_process->sysbk_old = old;
+                success = 0;
+                }
         }
         break;
         
         case SYS5_TLB: {
-
+            if (running_process->tlb_new == NULL && running_process->tlb_old == NULL) {
+                //state_copy(running_process->tlb_new, new);
+                //state_copy(running_process->tlb_old, old);
+                running_process->tlb_new = new;
+                running_process->tlb_old = old;
+                success = 0;
+            }
         }
         break;
 
-        case SYS5_PGMTRAP:
-        
+        case SYS5_PGMTRAP: {
+            if (running_process->pgmtp_new == NULL && running_process->pgmtp_old == NULL) {
+                running_process->pgmtp_new = new;
+                running_process->pgmtp_old = old;
+                //state_copy(running_process->pgmtp_new, new);
+                //state_copy(running_process->pgmtp_old, old);
+                success = 0;
+            }
+        }   
         break;
         
         default:
@@ -582,19 +709,30 @@ void Get_pid_ppid (void ** pid, void ** ppid) {
 
     if (pid != NULL) 
         *pid = running_process;
-
-    if(*ppid != NULL) 
+    if(ppid != NULL) 
         *ppid = running_process->p_parent;
 
 }
 
 
 void programtrap_handler(){
-    //termprint("pg trap",0);
-    PANIC();
+    //setDebug(10);
+    update_usertime(running_process);
+    if (!specifiedHandler(SYS5_PGMTRAP, (state_t*)PGMTRAP_OLDAREA)) {
+        //print("No pgmtrp handler found\n");
+        TerminateProcess(NULL);
+        schedule(NULL);
+    }
+    //PANIC();
 }
 
 void tlb_handler(){
-    //termprint("tlb trap",0);
-    PANIC();
+    //print("tlb trap\n");
+    update_usertime(running_process);
+    if (!specifiedHandler(SYS5_TLB, (state_t*)TLB_OLDAREA)) {
+        //print("No tlb handler found\n");
+        TerminateProcess(NULL);
+        schedule(NULL);
+    }
+    //PANIC();
 }

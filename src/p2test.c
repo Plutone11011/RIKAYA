@@ -102,7 +102,7 @@ unsigned int p5Stack;	/* so we can allocate new stack for 2nd p5 */
 int creation = 0; 				/* return code for SYSCALL invocation */
 memaddr *p5MemLocation = (memaddr*)0x34;		/* To cause a p5 trap */
 
-pid_t p4pid;
+pid_t p4pid, p5pid, p6pid, p7pid;
 pid_t testpid;
 pid_t childpid, intermediatepid, p8pid;
 
@@ -265,12 +265,12 @@ void test() {
 
 
 	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int)&p4pid);		/* start p4     */
-#if 0
-	SYSCALL(CREATEPROCESS, (int)&p5state, DEFAULT_PRIORITY, 0); 		/* start p5     */
+//#if 0
+	SYSCALL(CREATEPROCESS, (int)&p5state, DEFAULT_PRIORITY, (int)&p5pid); 		/* start p5     */
 
-	SYSCALL(CREATEPROCESS, (int)&p6state, DEFAULT_PRIORITY, 0);		/* start p6		*/
+	SYSCALL(CREATEPROCESS, (int)&p6state, DEFAULT_PRIORITY, (int)&p6pid);		/* start p6		*/
 
-	SYSCALL(CREATEPROCESS, (int)&p7state, DEFAULT_PRIORITY, 0);		/* start p7		*/
+	SYSCALL(CREATEPROCESS, (int)&p7state, DEFAULT_PRIORITY, (int)&p7pid);		/* start p7		*/
 
 	SYSCALL(PASSEREN, (int)&endp5, 0, 0);
 
@@ -298,7 +298,7 @@ void test() {
 	/* should not reach this point, since p1 just got a program trap */
 	print("error: p1 still alive after progtrap & no trap vector\n");
 	PANIC();					/* PANIC !!!     */
-	#endif
+	//#endif
 }
 
 
@@ -449,8 +449,9 @@ void p4() {
 
 	print("p4 create a new p4\n");
 	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int) &p42id);			/* start a new p4    */
-
+	//setDebug(35);
 	SYSCALL(PASSEREN, (int)&synp4, 0, 0);				/* wait for it       */
+	//setDebug(36);
 	print("p4 termination of the child\n");
 	if (SYSCALL(TERMINATEPROCESS, (int) &p42id, 0, 0) < 0) {			/* terminate p4      */
 		print("error: terminate process is wrong\n");
@@ -477,6 +478,7 @@ void p5prog() {
 	unsigned int exeCode = pstat_o.cause;
 	exeCode = exeCode & CAUSEMASK;
 
+	//setDebug(exeCode);
 	switch (exeCode) {
 		case EXC_BUSINVFETCH:
 			print("pgmTrapHandler - Access non-existent memory\n");
@@ -500,6 +502,7 @@ void p5prog() {
 
 		default:
 			print("pgmTrapHandler - other program trap\n");
+			break;
 	}
 
 	LDST(&pstat_o);  /* "return" to old area (that changed meanwhile) */
@@ -554,15 +557,18 @@ void p5() {
 
 
 	/* specify trap vectors */
-	SYSCALL(SPECPASSUP, 2, (int)&pstat_o, (int)&pstat_n);
-
-	SYSCALL(SPECPASSUP, 1, (int)&mstat_o, (int)&mstat_n);
-
-	SYSCALL(SPECPASSUP, 0, (int)&sstat_o, (int)&sstat_n);
+	SYSCALL(SPECPASSUP, SYS5_PGMTRAP, (int)&pstat_o, (int)&pstat_n);
+	SYSCALL(SPECPASSUP, SYS5_TLB, (int)&mstat_o, (int)&mstat_n);
+	SYSCALL(SPECPASSUP, SYS5_SYSBK, (int)&sstat_o, (int)&sstat_n);
 
 	print("p5 - try to cause a pgm trap access some non-existent memory\n");
 	/* to cause a pgm trap access some non-existent memory */	
 	*p5MemLocation = *p5MemLocation + 1;		 /* Should cause a program trap */
+	//setDebug(10);
+	unsigned int exeCode = pstat_o.cause;
+	exeCode = exeCode & CAUSEMASK;
+
+	setDebug(exeCode);
 }
 
 void p5a() {
@@ -633,7 +639,7 @@ void p6() {
 /*p7 -- program trap without initializing passup vector*/
 void p7() {
 	print("p7 starts\n");
-
+	//setDebug(7);
 	* ((memaddr *) BADADDR) = 0;
 
 	print("error: p7 alive after program trap with no trap vector\n");

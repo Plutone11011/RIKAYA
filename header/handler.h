@@ -23,5 +23,6 @@ int Do_IO (unsigned int command, unsigned int *reg, unsigned int tx_rx);
 void Set_Tutor ();
 int Spec_Passup (int type, state_t *old, state_t *new);
 void Get_pid_ppid (void ** pid, void ** ppid);
+static int specifiedHandler (int type, state_t* s);
 
 #endif

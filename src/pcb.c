@@ -55,6 +55,10 @@ pcb_t *allocPcb(void){
         lastPcb->user_time = lastPcb->kernel_time = lastPcb->wallclock_time = 0;
         lastPcb->start_kernel = lastPcb->last_scheduled = 0 ;
 
+        lastPcb->sysbk_new = lastPcb->sysbk_old = NULL;
+        lastPcb->tlb_new = lastPcb->tlb_old = NULL;
+        lastPcb->pgmtp_new = lastPcb->pgmtp_old = NULL;
+
         setlist_head(lastPcb->p_child) ;
         setlist_head(lastPcb->p_sib) ;
         if (pcbfree_h != lastPcb){

@@ -43,9 +43,9 @@ typedef int S32;
 
 /* Used for SYS5 processing */
 #define SYS5_TYPES 3
-#define SYS5_TLB 0
-#define SYS5_PGMTRAP 1
-#define SYS5_SYSBK 2
+#define SYS5_TLB 1
+#define SYS5_PGMTRAP 2
+#define SYS5_SYSBK 0
 
 /* nucleus (phase2)-handled SYSCALL values */
 #define GETCPUTIME 1

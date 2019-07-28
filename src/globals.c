@@ -28,7 +28,6 @@ void setDebug(int d){
 }
 
 void state_copy(state_t *s1, state_t *s2){
-
     int i = 0 ;
     s1->cause = s2->cause ;
     s1->entry_hi = s2->entry_hi ;

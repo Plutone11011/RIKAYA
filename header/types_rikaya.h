@@ -33,7 +33,10 @@ typedef struct pcb_t {
 	cpu_t user_time, kernel_time;
 	cpu_t wallclock_time ;
 	cpu_t last_scheduled, start_kernel ;
-	//cpu_t last_time ?
+	/* Handlers */
+	state_t *sysbk_old, *sysbk_new;
+	state_t *tlb_old, *tlb_new;
+	state_t *pgmtp_old, *pgmtp_new;
 
 } pcb_t;
 
