@@ -6,4 +6,83 @@ p2 is OK
 p3 is started
 p3 - WAITCLOCK OK
 p3 - CPU time correctly maintained
-kkernel panic()
+first incarnation of p4 starts
+p5 starts
+p6 starts
+p7 starts
+p4 create a new p4
+p5 - try to cause a pgm trap access some non-existent memory
+second incarnation of p4 starts
+pgmTrapHandler - other program trap
+p4 termination of the child
+pgmTrapHandler - other program trap
+p4 is OK
+pgmTrapHandler - other program trap
+p4 termination after the child
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapHandler - other program trap
+pgmTrapH

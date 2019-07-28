@@ -207,7 +207,8 @@ int specifiedHandler (int type, state_t* s) {
             //*old = *s;
             state_copy(old, s);
             update_kerneltime(running_process);
-            update_usertime(running_process);
+            setHILOtime(&running_process->last_scheduled);
+            set_timer();
             //set_lastScheduled(running_process);
             //setDebug(0xFE);
             LDST(new);
@@ -216,8 +217,9 @@ int specifiedHandler (int type, state_t* s) {
             return 0;
         
     }
-    else
+    else{
         return 0;
+    }
     //return found;
 }
 
