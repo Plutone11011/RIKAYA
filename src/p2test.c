@@ -20,9 +20,14 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2019
  */
 
-#include "../header/p2test.h"
+#include "../header/const_rikaya.h"
+#include "../header/types_rikaya.h"
+//#include <umps/libumps.h>
+//#include <umps/arch.h>
 
-
+typedef unsigned int devregtr;
+//typedef unsigned int cpu_t;
+typedef unsigned int pid_t;
 
 /* if these are not defined */
 /* typedef U32 cpu_t; */
@@ -34,13 +39,13 @@
 #define RECVD	5
 #define TRANSM 5
 
-
+#define STATUS_ALL_INT_ENABLE(x)    (x | (0xFF << 8))
 
 #define CLOCKINTERVAL	100000UL	/* interval to V clock semaphore */
 
 #define TERMSTATMASK	0xFF
 #define TERMCHARMASK	0xFF00
-#define CAUSEMASK		0xFFFFFF
+#define CAUSEMASK		0xFF
 #define VMOFF 			0xF8FFFFFF
 
 #define KUPBITON		0x8			//nota bene
@@ -106,6 +111,9 @@ pid_t p4pid, p5pid, p6pid, p7pid;
 pid_t testpid;
 pid_t childpid, intermediatepid, p8pid;
 
+void	p2(),p3(),p4(),p5(),p5a(),p5b(),p6(),p7(),p7a(),p5prog(),p5mm();
+void	p5sys(),p8root(),child1(),child2(),p8leaf(),curiousleaf(), intermediate();
+
 /* a procedure to print on terminal 0 */
 void print(char *msg) {
 	unsigned int command;
@@ -121,9 +129,10 @@ void print(char *msg) {
 		command = PRINTCHR | (((devregtr) *s) << BYTELEN);
 
 		/* Wait for I/O completion (SYS8) */
-		status = SYSCALL(WAITIO, command, (unsigned int)base, FALSE);
+		status = SYSCALL(WAITIO, command, (int)base, FALSE);
 
 		/*		PANIC(); */
+
 		if ((status & TERMSTATMASK) != TRANSM)
 			PANIC();
 
@@ -143,25 +152,28 @@ void print(char *msg) {
 void test() {	
 
 	SYSCALL(VERHOGEN, (int)&testsem, 0, 0);					/* V(testsem)   */
-	 
+
 	if (testsem != 1) { print("error: p1 v(testsem) with no effects\n"); PANIC(); }
+
 	print("p1 v(testsem)\n");
+
 	/* set up states of the other processes */
-	
+
 	/* set up p2's state */
 	STST(&p2state);			/* create a state area using p1's state    */
+
 	/* stack of p2 should sit above ??????  */
 	p2state.reg_sp = p2state.reg_sp - FRAME_SIZE;
 
 	/* p2 starts executing function p2 */
 	p2state.pc_epc = (memaddr)p2;
-	
+
 	/* p2 has interrupts on and unmasked */
 	p2state.status = STATUS_ALL_INT_ENABLE(p2state.status);
 
+
 	/* Set up p3's state */
 	STST(&p3state);
-	
 
 	/* p3's stack is another 1K below p2's one */
 	p3state.reg_sp = p2state.reg_sp - FRAME_SIZE;
@@ -171,6 +183,7 @@ void test() {
 
 	/* Set up p4's state */
 	STST(&p4state);
+
 	/* p4's stack is another 1k below p3's one */
 	p4state.reg_sp = p3state.reg_sp - FRAME_SIZE;
 	p4state.pc_epc = (memaddr)p4;
@@ -259,7 +272,7 @@ void test() {
 	SYSCALL(CREATEPROCESS, (int)&p3state, DEFAULT_PRIORITY, 0);				/* start p3  */
 
 	print("p3 is started\n");
-	setDebug(0);
+
 	/* P1 blocks until p3 ends */
 	SYSCALL(PASSEREN, (int)&endp3, 0, 0);					/* P(endp3)     */
 
@@ -298,7 +311,6 @@ void test() {
 	/* should not reach this point, since p1 just got a program trap */
 	print("error: p1 still alive after progtrap & no trap vector\n");
 	PANIC();					/* PANIC !!!     */
-	//#endif
 }
 
 
@@ -309,6 +321,7 @@ void p2() {
 	cpu_t	user_t1, user_t2;	 /* user time used       */
 	cpu_t	kernel_t1, kernel_t2;	 /* kernel time used       */
 	cpu_t	wallclock_t1, wallclock_t2;	 /* wallclock time used       */
+
 	/* startp2 is initialized to 0. p1 Vs it then waits for p2 termination */
 	SYSCALL(PASSEREN, (int)&startp2, 0, 0);				/* P(startp2)   */
 
@@ -330,6 +343,7 @@ void p2() {
 
 	now1 = getTODLO();                  				/* time of day   */
 	SYSCALL(GETCPUTIME, (int)&user_t1, (int)&kernel_t1, (int)&wallclock_t1);			/* CPU time used */
+
 	/* delay for several milliseconds */
 	for (i = 1; i < LOOPNUM; i++)
 		;
@@ -355,6 +369,7 @@ void p2() {
 	}
 
 	p1p2synch = 1;				/* p1 will check this */
+
 	SYSCALL(VERHOGEN, (int)&endp2, 0, 0);				/* V(endp2)     */
 
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);			/* terminate p2 */
@@ -449,9 +464,8 @@ void p4() {
 
 	print("p4 create a new p4\n");
 	SYSCALL(CREATEPROCESS, (int)&p4state, DEFAULT_PRIORITY, (int) &p42id);			/* start a new p4    */
-	//setDebug(35);
+
 	SYSCALL(PASSEREN, (int)&synp4, 0, 0);				/* wait for it       */
-	//setDebug(36);
 	print("p4 termination of the child\n");
 	if (SYSCALL(TERMINATEPROCESS, (int) &p42id, 0, 0) < 0) {			/* terminate p4      */
 		print("error: terminate process is wrong\n");
@@ -476,9 +490,8 @@ void p4() {
 /* p5's program trap handler */
 void p5prog() {
 	unsigned int exeCode = pstat_o.cause;
-	exeCode = exeCode & CAUSEMASK;
+	exeCode = (exeCode & CAUSEMASK)>>2;
 
-	//setDebug(exeCode);
 	switch (exeCode) {
 		case EXC_BUSINVFETCH:
 			print("pgmTrapHandler - Access non-existent memory\n");
@@ -502,7 +515,6 @@ void p5prog() {
 
 		default:
 			print("pgmTrapHandler - other program trap\n");
-			break;
 	}
 
 	LDST(&pstat_o);  /* "return" to old area (that changed meanwhile) */
@@ -513,7 +525,7 @@ void p5prog() {
 void p5mm() {
 	print("memory management (tlb) trap - set user mode on\n");
 	mstat_o.status = mstat_o.status & 0xFFFFFFF0;  /* user mode on */
-	mstat_o.status &= ~(0x1); /* disable VM */
+	mstat_o.status &= VMOFF; /* disable VM */
 	mstat_o.pc_epc = (memaddr)p5b;  /* return to p5b */
 	mstat_o.reg_sp = p5Stack-FRAME_SIZE;				/* Start with a fresh stack */
 
@@ -557,18 +569,15 @@ void p5() {
 
 
 	/* specify trap vectors */
-	SYSCALL(SPECPASSUP, SYS5_PGMTRAP, (int)&pstat_o, (int)&pstat_n);
-	SYSCALL(SPECPASSUP, SYS5_TLB, (int)&mstat_o, (int)&mstat_n);
-	SYSCALL(SPECPASSUP, SYS5_SYSBK, (int)&sstat_o, (int)&sstat_n);
+	SYSCALL(SPECPASSUP, 2, (int)&pstat_o, (int)&pstat_n);
+
+	SYSCALL(SPECPASSUP, 1, (int)&mstat_o, (int)&mstat_n);
+
+	SYSCALL(SPECPASSUP, 0, (int)&sstat_o, (int)&sstat_n);
 
 	print("p5 - try to cause a pgm trap access some non-existent memory\n");
 	/* to cause a pgm trap access some non-existent memory */	
 	*p5MemLocation = *p5MemLocation + 1;		 /* Should cause a program trap */
-	//setDebug(10);
-	unsigned int exeCode = pstat_o.cause;
-	exeCode = exeCode & CAUSEMASK;
-
-	setDebug(exeCode);
 }
 
 void p5a() {
@@ -579,16 +588,16 @@ void p5a() {
 	/* generate a TLB exception by turning on VM without setting up the 
 		 seg tables */
 	p5Status = getSTATUS();
-	p5Status = p5Status | 0x00000001;
+	p5Status = p5Status | 0x03000000;
 	setSTATUS(p5Status);
 }
 
 /* second part of p5 - should be entered in user mode */
 void p5b() {
 	cpu_t		time1, time2;
-
+	setDebug(0xAA);
 	SYSCALL(13, 0, 0, 0);
-
+	setDebug(0xBB);
 	/* the first time through, we are in user mode */
 	/* and the P should generate a program trap */
 	SYSCALL(PASSEREN, (int)&endp4, 0, 0);			/* P(endp4)*/
@@ -613,8 +622,8 @@ void p5b() {
 	/* since this has already been      */
 	/* done for PROGTRAPs               */
 	if (SYSCALL(SPECPASSUP, 2, (int)&pstat_o, (int)&pstat_n) == 0) {
-		 print("error: double SPECPASSUP should not succeed\n");
-		 PANIC();
+		print("error: double SPECPASSUP should not succeed\n");
+		PANIC();
 	}
 
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);
@@ -639,7 +648,7 @@ void p6() {
 /*p7 -- program trap without initializing passup vector*/
 void p7() {
 	print("p7 starts\n");
-	//setDebug(7);
+
 	* ((memaddr *) BADADDR) = 0;
 
 	print("error: p7 alive after program trap with no trap vector\n");
@@ -723,10 +732,11 @@ void curiousleaf() {
 	pid_t parentid;
 	print("leaf process starts\n");
 
+	SYSCALL(GETPID, 0, (unsigned int)&parentid, 0);
 	if (SYSCALL(TERMINATEPROCESS, (int)&parentid, 0, 0) == 0) {
-    print("error: curiousleaf killed its parent\n");
-    PANIC();
-  }
+		print("error: curiousleaf killed its parent\n");
+		PANIC();
+	}
 
 	while (1) {
 		SYSCALL(GETPID, 0, (int)&parentid, 0);
@@ -739,7 +749,7 @@ void curiousleaf() {
 			PANIC();
 		}
 		print("curiousleaf waiting...\n");
-    SYSCALL(WAITCLOCK, 0, 0, 0);
+		SYSCALL(WAITCLOCK, 0, 0, 0);
 	}
 
 	SYSCALL(VERHOGEN, (int)&endcreate, 0, 0);

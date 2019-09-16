@@ -13,76 +13,14 @@ p7 starts
 p4 create a new p4
 p5 - try to cause a pgm trap access some non-existent memory
 second incarnation of p4 starts
-pgmTrapHandler - other program trap
+pgmTrapHandler - Access non-existent memory
 p4 termination of the child
-pgmTrapHandler - other program trap
+p5 - try to generate a TLB exception
 p4 is OK
-pgmTrapHandler - other program trap
+memory management (tlb) trap - set user mode on
 p4 termination after the child
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapHandler - other program trap
-pgmTrapH
+p5 - try call sys13 in user mode for verify pass up
+High level SYS call from user mode process
+p5 - try to call P in user mode
+p5 - try to redefine PGMVECT, it will cause p5 termination
+p1 knows p5 ended

@@ -19,6 +19,7 @@ extern int waitclockSem, timer_cause;
 /*debug variables*/
 extern int debug ;
 void setDebug(int d);
+void A(int x);
 
 void state_copy(state_t *s1, state_t *s2);
 

@@ -22,6 +22,11 @@ int blocked_processes, active_processes ;
 
 /*debug variables*/
 int debug = -1 ;
+int debugA = -1;
+
+void A(int x) {
+    debugA = x;
+}
 
 void setDebug(int d){
     debug = d ;
