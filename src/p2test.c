@@ -476,7 +476,7 @@ void p4() {
 /* p5's program trap handler */
 void p5prog() {
 	unsigned int exeCode = pstat_o.cause;
-	exeCode = exeCode & CAUSEMASK;
+	exeCode = (exeCode & CAUSEMASK) >> 2;
 
 	//setDebug(exeCode);
 	switch (exeCode) {
