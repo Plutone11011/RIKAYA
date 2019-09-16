@@ -114,6 +114,8 @@ ___
 Lo scheduler implementato è basato su **priorità**, è **preemptive** in quanto concede un determinato **timeslice** di 3ms ad ogni processo.
 Ricorre alla tecnica di aging per evitare *starvation* dei processi a più bassa priorità: infatti ad ogni scadere del timeslice 
 viene incrementata la priorità di tutti i processi presenti della *Ready Queue*.
+La funzione principale dello scheduler è **schedule**, che a seconda della presenza di processi ready o di processi bloccati prende scelte differenti: se ci sono ancora processi in coda ready, sceglie il prossimo e salva il precedente, e prima di mandarlo in esecuzione, setta il timer e prepara valori per il calcolo dei tempi dei processi, altrimenti se ci sono solo processi bloccati va in wait aspettando un interrupt. La funzione **insertProcqReady** viene chiamata da **schedule** per gestire l'inserimento in coda di un processo, che può essere quello appena switchato o uno nuovo. Il timer viene calcolato da una funzione che basandosi sul time of day, decide se il prossimo timer da settare è il timeslice o lo pseudoclock, a seconda di quale scadenza è più vicina.
+Lo scheduler si occupa anche di definire le funzioni per il calcolo dello user time e kernel time dei processi. Vengono calcolati rispettivamente mantenendo delle variabili ausiliarie *start_kernel*, che registra il tempo d'inizio esecuzione del codice kernel, e *last_scheduled*, che calcola l'inizio dell'esecuzione del codice dei processi
 ___
 ## 4. Interrupt
 
@@ -142,9 +144,9 @@ Int. Line  Device Class
 Gli interrupt sono gestiti da una routine **interrupt_handler()** che innanzitutto distingue tra interrupt *TIMESLICE* e
 *PSEUDOCLOCK*.  
 Nel primo caso come si è già detto viene incrementata la priorità dei processi ready, nel secondo caso vengono
-risvegliati eventuali processi che aspettavano il tick del clock di sistema (SYS6).
+risvegliati con una **Verhogen** eventuali processi che aspettavano il tick del clock di sistema (SYS6); in entrambi i casi, viene calcolato il kernel time e ridato il controllo allo scheduler.
 Se invece l'interrupt è stato generato da un device, facendo riferimento alle specifiche dell'architettura di uMPS si risale al
-numero della linea di interrupt e al numero del device.  
+numero della linea di interrupt e al numero del device, dapprima identificando la linea tramite il registro *cause*, poi utilizzando la linea per ottenere la bitmap per il numero di device.  
 Tenendo conto che le prime tre linee (0-1-2) non vengono considerate perchè vengono già gestite prima, la numerazione effettiva  
 delle linee device parte da 0, corrispondente alla linea 3, per poi continuare fino a 4, cioè la linea 7.  
 È importante distinguere tra device "normali" e terminali, in quanto quest'ultimi sono una coppia di dispositivi formata da un
@@ -191,15 +193,16 @@ Restituisce il tempo di esecuzione del processo chiamante:
 ```
 int SYSCALL(CREATEPROCESS, state_t *statep, int priority, void ** cpid)
 ```
-Crea un nuovo processo come figlio del processo chiamante, settando lo stato iniziale in base al parametro statep.  
+Crea un nuovo processo come figlio del processo chiamante(se esiste), settando lo stato iniziale in base al parametro statep.  
 Ritorna 0 in caso di successo, -1 altrimenti. Se cpid è passato come parametro conterrà il pid del nuovo processo.
+Inizializza la priorità, kernel e user time, e lo inserisce nella coda ready.
 
 * SYS3 **Terminate_Process**
 >
 ```
 int SYSCALL(TERMINATEPROCESS, void ** pid, 0, 0)
 ```
-Termina il processo con il pid passato come parametro. Se non viene specificato alcun pid, viene terminato il processo corrente.
+Termina il processo con il pid passato come parametro, se figlio del processo corrente. Se non viene specificato alcun pid, viene terminato il processo corrente. Se il processo terminato ha figli, questi diventano figli di un tutore, specificato dal chiamante, o dalla radice se non esiste. Se il processo è bloccato sul semaforo, viene sbloccato, altrimenti viene tolto dalla coda ready (se non era il corrente). Viene infine riportato nei processi liberi.
 In caso di successo ritorna 0, -1 altrimenti.
 
 * SYS4 **Verhogen**
@@ -207,13 +210,13 @@ In caso di successo ritorna 0, -1 altrimenti.
 ```
 void SYSCALL(VERHOGEN, int *semaddr, 0, 0)
 ```
-Operazione di V (incremento, rilascio) sul semaforo il cui valore è puntato da semaddr.
+Operazione di V (incremento, rilascio) sul semaforo il cui valore è puntato da semaddr, e conseguente sblocco di un processo, se il valore del semaforo è minore o uguale a 0.
 * SYS5 **Passeren**
 >
 ```
 void SYSCALL(PASSEREN, int *semaddr, 0, 0)
 ```
-Opperazione di P (decremento, richiesta) sul semaforo il cui valore è puntato da semaddr.
+Opperazione di P (decremento, richiesta) sul semaforo il cui valore è puntato da semaddr. Se il processo corrente è stato quello ad essere bloccato, viene sospeso, resettandone la priorità e salvandone lo stato.
 * SYS6 **Wait_Clock**
 >
 ```
@@ -226,8 +229,7 @@ Sospende il processo corrente fino al prossimo tick di sistema. Realizzata media
 ```
 int SYSCALL(IOCOMMAND, unsigned int command, unsigned int *register, 0)
 ```
-Operazione bloccante per il chiamante che viene sospeso fino all'esecuzione del comando. Il parametro *command* viene copiato nel campo
-comando del registro puntato da *register*. Il valore di ritorno è il contenuto del registro status del dispositivo.
+Operazione bloccante per il chiamante che viene sospeso fino all'interrupt che segnala il completamento del comando. Il parametro *command* viene copiato nel campo comando del registro puntato da *register*. Il valore di ritorno è il contenuto del registro status del dispositivo. 
 * SYS8 **Set_Tutor**
 >
 ```
