@@ -1,6 +1,8 @@
 #include "../header/handler.h"
 #include "../header/p2test.h"
 
+
+
 void SYS_handler () {
     /*controlla nel registro Cause se l'eccezione sollevata
     è di tipo breakpoint o syscall, nel caso sia syscall
@@ -38,7 +40,7 @@ void SYS_handler () {
     }
     else if (CAUSE_EXCCODE_GET(cause) == EXC_SYSCALL){
 
-        //setDebug(!(old_process_state->status & STATUS_KUc));
+        //tmp = old_process_state->status ;
         //eseguita in kernel mode?
         if (!(old_process_state->status & STATUS_KUc)){
 
@@ -99,7 +101,7 @@ void SYS_handler () {
 
         }
         else {
-            //setDebug(0xAA);
+            setDebug(0xAA);
             //scheduler = 0 ;
             //eseguita in user mode
             if (old_process_state->reg_a0 <= 10) {
@@ -119,7 +121,6 @@ void SYS_handler () {
     }
     //E' necessario un Passup
     if (type > -1) {
-        setDebug((int)handler);
         A(type);
         if (!specifiedHandler(type, handler)) {
             TerminateProcess(NULL);
