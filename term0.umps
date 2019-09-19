@@ -20,7 +20,50 @@ p4 is OK
 memory management (tlb) trap - set user mode on
 p4 termination after the child
 p5 - try call sys13 in user mode for verify pass up
-High level SYS call from kernel mode process
-pgmTrapHandler - Address Error: KSegOS w/KU=1
 High level SYS call from user mode process
 p5 - try to call P in user mode
+p5 - try to redefine PGMVECT, it will cause p5 termination
+p1 knows p5 ended
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf waiting...
+curiousleaf waiting...
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf waiting...
+curiousleaf waiting...
+curiousleaf okay, intermediate died
+
+p1 finishes OK -- TTFN
+System halted 

@@ -21,8 +21,8 @@ int waitclockSem, timer_cause ;
 int blocked_processes, active_processes ;
 
 /*debug variables*/
-int debug = -1 ;
-int debugA = -1;
+int debug = 666 ;
+int debugA = 666;
 
 void A(int x) {
     debugA = x;

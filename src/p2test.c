@@ -286,7 +286,7 @@ void test() {
 
 	print("p1 knows p5 ended\n");
 
-	//SYSCALL(PASSEREN, (int)&blkp4, 0, 0);					/* P(blkp4)		*/
+	SYSCALL(PASSEREN, (int)&blkp4, 0, 0);					/* P(blkp4)		*/
 
 	/* now for a more rigorous check of process termination */
 	for (p8inc = 0; p8inc < 4; p8inc++) {
@@ -470,9 +470,7 @@ void p4() {
 	}
 
 	print("p4 is OK\n");
-
 	SYSCALL(VERHOGEN, (int)&endp4, 0, 0);				/* V(endp4)          */
-
 	print("p4 termination after the child\n");
 
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);			/* terminate p4      */
@@ -499,14 +497,14 @@ void p5prog() {
 			print("pgmTrapHandler - privileged instruction - set kernel mode on\n");
 			print("p5 - try call sys13 in kernel mode for verify pass up\n");
 			/* return in kernel mode */
-			pstat_o.status = pstat_o.status | 0xFFFFFFF0;
+			pstat_o.status = pstat_o.status | 0xF;
 			pstat_o.pc_epc = (memaddr)p5b;
 			break;
 
 		case EXC_ADDRINVLOAD:
 			print("pgmTrapHandler - Address Error: KSegOS w/KU=1\n");
 			/* return in kernel mode */
-			pstat_o.status = pstat_o.status & 0xFFFFFFF0;
+			pstat_o.status = pstat_o.status | 0xF;
 			pstat_o.pc_epc = (memaddr)p5b;
 			break;
 
@@ -521,7 +519,7 @@ void p5prog() {
 /* void p5mm(unsigned int cause) { */
 void p5mm() {
 	print("memory management (tlb) trap - set user mode on\n");
-	mstat_o.status = mstat_o.status | 0xF ;  /* user mode on */
+	mstat_o.status = mstat_o.status & 0xFFFFFFF0 ;  /* user mode on */
 	mstat_o.status &= VMOFF; /* disable VM */
 	mstat_o.pc_epc = (memaddr)p5b;  /* return to p5b */
 	mstat_o.reg_sp = p5Stack-FRAME_SIZE;				/* Start with a fresh stack */
@@ -596,9 +594,7 @@ void p5b() {
 	SYSCALL(13, 0, 0, 0);
 	/* the first time through, we are in user mode */
 	/* and the P should generate a program trap */
-	//setDebug(1);	
 	SYSCALL(PASSEREN, (int)&endp4, 0, 0);			/* P(endp4)*/
-
 	/* do some delay to be reasonably sure p4 and its offspring are dead */
 	time1 = 0;
 	time2 = 0;
@@ -609,9 +605,8 @@ void p5b() {
 	}
 
 	/* if p4 and offspring are really dead, this will increment blkp4 */
-
 	SYSCALL(VERHOGEN, (int)&blkp4, 0, 0);			/* V(blkp4) */
-
+	
 	SYSCALL(VERHOGEN, (int)&endp5, 0, 0);			/* V(endp5) */
 
 	print("p5 - try to redefine PGMVECT, it will cause p5 termination\n");
