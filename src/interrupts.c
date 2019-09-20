@@ -40,13 +40,14 @@ void interrupt_handler(){
         setHILOtime(&running_process->start_kernel);
     }
     update_usertime(running_process);
-    //processo si è interrotto, calcolo user time fino a qui  
-    //se il processor local timer ha generato l'interrupt
-    //si chiama lo scheduler con le priorità
-    //aggiornate
+    /*
+        Il processo si è interrotto, calcolo user time fino a qui.  
+        Se il processor local timer ha generato l'interrupt
+        si chiama lo scheduler con le priorità aggiornate.
+    */
     if (CAUSE_IP_GET(cause,INT_T_SLICE)){
         if (timer_cause == TIMESLICE){
-            //timeslice
+            /* Timeslice */
             if (!emptyProcQ(&ready_queue)){
                 pcb_t *ready_pcb ;
                 list_for_each_entry(ready_pcb,&ready_queue,p_next){
@@ -56,7 +57,7 @@ void interrupt_handler(){
         }
         else {
             while (waitclockSem < 0){
-                //risveglia tutti i processi sullo pseudoclock
+                /* Risveglia tutti i processi sullo pseudoclock */
                 Verhogen(&waitclockSem);
             }
 
@@ -68,11 +69,11 @@ void interrupt_handler(){
         schedule(old_process_state);
     }
     else {
-        pcb_t *wakeupProc;   //  Processo da risvegliare
-        dtpreg_t *dev;  //  Registro device
+        pcb_t *wakeupProc;   /* Processo da risvegliare */
+        dtpreg_t *dev;  /* Registro device */
         termreg_t *term ;
         
-        int bitmap, IntlineNo, DevNo;   // Bitmap Interrupt, numero linea e device
+        int bitmap, IntlineNo, DevNo;   /* Bitmap Interrupt, numero linea e device */
         
         
         for (IntlineNo = INT_LOWEST; IntlineNo < INT_LOWEST + DEV_USED_INTS; IntlineNo++) {
@@ -80,24 +81,26 @@ void interrupt_handler(){
                 break;
         }
         if (IntlineNo == INT_LOWEST + DEV_USED_INTS){
-            //nessuna delle linee ha un interrupt pending
+            /* Nessuna delle linee ha un interrupt pending */
             PANIC();
         }
-        //bitmap del device che ha causato interrupt
+        /* Bitmap del device che ha causato interrupt */
         bitmap = *((memaddr*)INTR_CURRENT_BITMAP(IntlineNo));  
         
-    //  Cerchiamo il primo bit a 1 per identificare il numero di device
+        /* Cerchiamo il primo bit a 1 per identificare il numero di device */
         for (DevNo = 0; DevNo < DEV_PER_INT; DevNo++)
             if (bitmap  & (1U << DevNo)) 
                 break;
         
         
-        //IntlineNo non può avere un valore
-        //diverso da 3-7, nel caso andrebbe in PANIC prima
+        /* 
+            IntlineNo non può avere un valore diverso da 3-7, 
+            nel caso andrebbe in PANIC prima.
+        */
         if (IntlineNo == INT_TERMINAL) { 
             term = (termreg_t *)(DEV_ADDRESS(IntlineNo,DevNo));
             int TX_RX = -1;
-            //  Transm o recv?
+            /* Transm o recv? */
             
             if ((term->recv_status & 0xFF) == DEV_TRCV_S_CHARRECV) 
                 TX_RX = RX;
@@ -106,17 +109,16 @@ void interrupt_handler(){
             else 
                 PANIC();
             
-            //se non esiste il processo bloccato su quel device e quella linea, panic
+            /* Se non esiste il processo bloccato su quel device e quella linea, panic */
             if ((wakeupProc = headBlocked(&terms[DevNo][TX_RX])) == NULL)
                 PANIC();
 
-            //  V, libera processo
+            /* V, libera processo */
             Verhogen(&terms[DevNo][TX_RX]);
 
-            //  ACK
+            /* ACK */
             if (TX_RX == RX) {
-                //il valore di ritorno di SYSCALL
-                //va nel registro v0
+                /* Valore di ritorno SYSCALL nel registro v0 */
                 wakeupProc->p_s.reg_v0 = term->recv_status;
                 term->recv_command = DEV_C_ACK;
             }
@@ -130,7 +132,7 @@ void interrupt_handler(){
         }
         else {
             dev = (dtpreg_t *)(DEV_ADDRESS(IntlineNo,DevNo));
-            //Primo processo in attesa sul semaforo
+            /* Primo processo in attesa sul semaforo */
             if ((wakeupProc = headBlocked(&devs[DevNo][IntlineNo-3])) == NULL)
                 PANIC();
 
@@ -138,14 +140,14 @@ void interrupt_handler(){
             
             wakeupProc->p_s.reg_v0 = dev->status;
             
-            //Invio acknowledgement interrupt        
+            /* Invio acknowledgement interrupt */
             dev->command = DEV_C_ACK;
         }
         
         update_kerneltime(wakeupProc); 
     }
     if(running_process != NULL){
-        //eventuali calcoli sui tempi
+        /* Eventuali calcoli sui tempi */
         set_timer();
         setHILOtime(&running_process->last_scheduled);
         LDST(old_process_state);
