@@ -1,22 +1,68 @@
-1                        
-2          _nnnn_        
-3         dGGGGMMb       
-4        @p~qp~~qMb      
-5        M|@||@) M|      
-6        @,----.JM|      
-7       JS^\__/  qKL     
-8      dZP        qKRb   
-9     dZP          qKKb  
-10   fZP            SMMb 
-11   HZM            MMMM 
-12   FqM            MMMM 
-13 __| '.        |\dS'qML
-14 |    `.       | `' \Zq
-15_)      \.___.,|     .'
-16\____   )MMMMMP|   .'  
-17     `-'       `--'    
-18                       
-Good job from test1
-Good job from test2
-3231231231231231231
+p1 v(testsem)
+p2 was started
+p2 starts
+p2 v/p pairs successfully
+p2 is OK
+p3 is started
+p3 - WAITCLOCK OK
+p3 - CPU time correctly maintained
+first incarnation of p4 starts
+p5 starts
+p6 starts
+p7 starts
+p4 create a new p4
+p5 - try to cause a pgm trap access some non-existent memory
+second incarnation of p4 starts
+pgmTrapHandler - Access non-existent memory
+p4 termination of the child
+p5 - try to generate a TLB exception
+p4 is OK
+memory management (tlb) trap - set user mode on
+p4 termination after the child
+p5 - try call sys13 in user mode for verify pass up
+High level SYS call from user mode process
+p5 - try to call P in user mode
+p5 - try to redefine PGMVECT, it will cause p5 termination
+p1 knows p5 ended
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf waiting...
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf waiting...
+curiousleaf okay, intermediate died
+p8root starts
+child1 starts
+child2 starts
+intermediate starts (and dies)
+leaf process starts
+leaf process starts
+leaf process starts
+leaf process starts
+curiousleaf waiting...
+curiousleaf okay, intermediate died
+
+p1 finishes OK -- TTFN
 System halted 

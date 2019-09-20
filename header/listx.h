@@ -30,10 +30,10 @@ typedef unsigned int    size_tt;
     return: puntatore alla struttura dati che contiene il list_head puntato da 
         ptr
 */
+
 #define container_of(ptr, type, member) ({			\
 		const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 		(type *)( (char *)__mptr - offsetof(type,member) );})
-
 
 /* 
     Macro che restituisce l'offset in byte dall'inizio di una struttura a 

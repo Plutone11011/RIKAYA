@@ -7,6 +7,8 @@
 #ifndef UMPS_TYPES_H
 #define UMPS_TYPES_H
 
+#include "const.h"
+
 /* Device register type for disks, tapes and printers (dtp) */
 typedef struct dtpreg {
     unsigned int status;

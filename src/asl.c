@@ -1,6 +1,6 @@
 #include "../header/asl.h"
 
-semd_t semd_table[MAXSEM] ;
+semd_t semd_table[NUM_SEMAPHORES] ;
 
 semd_t *semdFree_h ;
 semd_t *semd_h ;
@@ -49,7 +49,6 @@ static semd_t* allocSemaphore(){
     if (semdFree_h != NULL){
         /*elimino elemento in coda*/
         semd_t *lastSem = container_of(semdFree_h->s_next.prev,semd_t,s_next) ;
-
         
         if (list_empty(&(semdFree_h->s_next))){
             semdFree_h = NULL ;
@@ -170,6 +169,7 @@ pcb_t* removeBlocked(int *key){
     }
     else {
         pcb_removed = removeProcQ(&(removeSem->s_procQ)) ;
+        pcb_removed->p_semkey = NULL ;
         //se la coda dei processi bloccati è vuota va liberato il semaforo
         if (emptyProcQ(&(removeSem->s_procQ))){
             freeSemaphore(removeSem);
@@ -202,6 +202,7 @@ pcb_t* outBlocked(pcb_t *p){
     else {
         //analogo a removeBlocked, ma su un pcb qualunque
         pcb_removed = outProcQ(&(removeSem->s_procQ),p) ;
+        pcb_removed->p_semkey = NULL ;
         if (emptyProcQ(&(removeSem->s_procQ))){
             freeSemaphore(removeSem);
         }
