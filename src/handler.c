@@ -332,7 +332,6 @@ int CreateProcess (state_t *statep, int priority, void ** cpid) {
 
         setHILOtime(&(new_child->wallclock_time));
     
-        active_processes++ ;
 
         success = 0;
 
@@ -404,7 +403,6 @@ int TerminateProcess (void ** pid) {
             blocked_processes-- ;
         }
         else {
-            active_processes-- ;
             if (*real_pid != running_process){
                 /* non è in esecuzione, è ready */
                 outProcQ(&ready_queue, *real_pid);
@@ -455,7 +453,6 @@ void Verhogen (int *semaddr){
        if (p != NULL){
             insertProcqReady(NULL,p);
             blocked_processes-- ;
-            active_processes++;
        }  
    }
     
@@ -487,7 +484,6 @@ void Passeren (int *semaddr) {
         */
         if (running_process != NULL){
             blocked_processes++ ;
-            active_processes-- ;
             suspended_pcb = running_process ;
             running_process->priority = running_process->original_priority ;
             running_process = NULL ;

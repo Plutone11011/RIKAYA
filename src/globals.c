@@ -17,12 +17,8 @@ int waitclockSem, timer_cause ;
     Bisogna contare quanti processi sono bloccati
     perché il kernel potrebbe doversi fermare, temporaneamente
     nel caso in cui non ci siano processi ready, ma processi waiting
-    il numero di processi attivi coincide con il numero di processi
-    ready e in esecuzione, in questo modo se non ci sono processi ready
-    ready ma c'è ancora un processo che necessita di essere 
-    terminato, lo scheduler può rilevarlo.
 */
-int blocked_processes, active_processes ;
+int blocked_processes ;
 
 /* Debug variables */
 int debug = 0xFF ;
@@ -49,7 +45,7 @@ void init_Kernel_Vars(){
     int i, j ;
     mkEmptyProcQ(&ready_queue);
     running_process = NULL ;
-    blocked_processes = active_processes = ready_processes = 0 ;
+    blocked_processes = ready_processes = 0 ;
 /* 
     Inizialmente a 0 perché qualora avvenga subito
     un'operazione di I/O (syscall 7 Do_IO)
